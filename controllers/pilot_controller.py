@@ -2,15 +2,15 @@ from flask import Blueprint, request
 from init import db, bcrypt
 from models.pilot import Pilot, pilot_schema, pilots_schema
 from flask_jwt_extended import create_access_token
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
 from datetime import timedelta
 
 pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
 
-@pilot_bp.route('/registerpo', methods=['POST'])
+@pilot_bp.route('/register', methods=['POST'])
 def pilot_register():
-    # try:
+    try:
         # { "name": "___", "email": "___", "password": "___" }
         body_data = request.get_json()
 
@@ -27,11 +27,17 @@ def pilot_register():
         db.session.commit()
         # Respond to the client
         return pilot_schema.dump(pilot), 201
-    # except IntegrityError as err:
-    #     if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
-    #         return { 'Sorry, either that ARN or email address is already in use. Please try again.', }, 409
-    #     if err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
-    #         return { f'Oops, your {err.orig.diag.column_name} is required!' }, 409
+    except (DataError, IntegrityError) as err:
+        if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
+            if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
+                return { 'Error': 'Your arn should be written with numbers only' }, 406
+            elif err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+                return { 'Error': 'Sorry, either that arn or email address is already in use. Please try again.' }, 409
+            elif err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
+                return { 'Error': f'Oops, your {err.orig.diag.column_name} is required!' }, 409
+        else:
+            return { 'Error': 'Oh no, an unexpected database error occurred!' }, 500
+
 
 @pilot_bp.route('/login', methods=['POST'])
 def pilot_login():
