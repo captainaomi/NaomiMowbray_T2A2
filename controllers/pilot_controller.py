@@ -1,14 +1,21 @@
 from flask import Blueprint, request
 from init import db, bcrypt
-from models.pilot import Pilot, pilot_schema, pilots_schema
+from models.pilot import Pilot
+from schemas.pilot_schema import pilot_schema, pilots_schema
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
 from datetime import timedelta
 
-pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
+pilots_bp = Blueprint('pilot', __name__, url_prefix='/pilots')
 
-@pilot_bp.route('/register', methods=['POST'])
+@pilots_bp.route('/')
+def get_all_pilots():
+    stmt = db.select(Pilot).order_by(Pilot.id)
+    pilots = db.session.scalars(stmt)
+    return pilots_schema.dump(pilots)
+
+@pilots_bp.route('/register', methods=['POST'])
 def pilot_register():
     try:
         # { "name": "___", "email": "___", "password": "___" }
@@ -30,7 +37,7 @@ def pilot_register():
     except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
-                return { 'Error': 'Your arn should be written with numbers only' }, 406
+                return { 'Error': 'Come on Captain, you know arns are numbers only' }, 406
             elif err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
                 return { 'Error': 'Sorry, either that arn or email address is already in use. Please try again.' }, 409
             elif err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
@@ -39,15 +46,15 @@ def pilot_register():
             return { 'Error': 'Oh no, an unexpected database error occurred!' }, 500
 
 
-@pilot_bp.route('/login', methods=['POST'])
+@pilots_bp.route('/login', methods=['POST'])
 def pilot_login():
     body_data = request.get_json()
-    # Find the pilot by arn
-    stmt = db.select(Pilot).filter_by(arn=body_data.get('arn'))
+    # Find the pilot by email
+    stmt = db.select(Pilot).filter_by(email=body_data.get('email'))
     pilot = db.session.scalar(stmt)
     # If pilot exists and password is correct
     if pilot and bcrypt.check_password_hash(pilot.password, body_data.get('password')):
-        token = create_access_token(identity=str(pilot.arn), expires_delta=timedelta(days=1))
-        return { 'arn': pilot.arn, 'token': token, 'is_admin': pilot.is_admin }
+        token = create_access_token(identity=str(pilot.id), expires_delta=timedelta(days=1))
+        return { 'email': pilot.email, 'token': token, 'is_admin': pilot.is_admin }
     else:
-        return { 'Oops, your email or password was incorrect. Please try again.' }, 401
+        return { 'Error': 'Oops, your email or password was incorrect. Please try again.' }, 418

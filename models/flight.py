@@ -1,6 +1,5 @@
 from init import db, ma
-from marshmallow import fields
-from marshmallow.validate import Length, And, Regexp, OneOf
+
 
 class Flight(db.Model):
     __tablename__ = "flights"
@@ -16,19 +15,3 @@ class Flight(db.Model):
 
     pilot = db.relationship('Pilot', back_populates='flights')
     aircraft = db.relationship('Aircraft', back_populates='flights')
-
-class FlightSchema(ma.Schema):
-    pilot = fields.Nested('PilotSchema', only=['id', 'arn', 'name'])
-    aircraft = ('AircraftSchema',)
-
-    route = fields.String(required=True, validate=And(
-        Length(min=10, error='Route must be at least ten characters long'),
-        Regexp('^[a-zA-Z0-9.\-_. ]+$', error='Please only use letters, numbers, dashes or spaces')
-    ))
-
-    class Meta:
-        fields = ('pilot_id', 'aircraft_id', 'id', 'date', 'route', 'landings', 'flight_time')
-        ordered = True
-
-flight_schema = FlightSchema()
-flights_schema = FlightSchema(many=True)

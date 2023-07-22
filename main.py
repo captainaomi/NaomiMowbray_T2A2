@@ -2,7 +2,7 @@ from flask import Flask
 import os
 from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
-from controllers.pilot_controller import pilot_bp
+from controllers.pilot_controller import pilots_bp
 from marshmallow.exceptions import ValidationError
 
 
@@ -32,7 +32,7 @@ def create_app():
     jwt.init_app(app)
 
     app.register_blueprint(db_commands)
-    app.register_blueprint(pilot_bp)
+    app.register_blueprint(pilots_bp)
     # app.register_blueprint(flights_bp)
 
     return app
