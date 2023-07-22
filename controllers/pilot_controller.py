@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from init import db, bcrypt
-from models.pilot import Pilot
-from schemas.pilot_schema import pilot_schema, pilots_schema
+from models.pilot import Pilot, pilot_schema, pilots_schema
+# from schemas.pilot_schema import pilot_schema, pilots_schema
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes

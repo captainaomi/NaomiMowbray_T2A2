@@ -12,4 +12,4 @@ class Pilot(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
 
     flights = db.relationship('Flight', back_populates='pilot')
-    expirations = db.relationship('Expirations', back_populates='pilot')
+    # expirations = db.relationship('Expirations', back_populates='pilot')

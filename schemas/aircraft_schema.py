@@ -10,7 +10,7 @@ class AircraftSchema(ma.Schema):
     ))
 
     class Meta:
-        fields = ('id',)
+        fields = ('id', 'callsign')
         ordered = True
 
 aircraft_schema = AircraftSchema()
