@@ -65,7 +65,7 @@ def add_expirations(pilot_id):
         else:
             return {
                 'Error': 'Oh no, some weird error happened!' }, 500
-        
+    
+    # TypeError message doesn't actually work yet, still not sure why?
     except TypeError:
-        # Custom error message for TypeError
         return {'Error': 'A TypeError occurred; please check your data.'}, 400

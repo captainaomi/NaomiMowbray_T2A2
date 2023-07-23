@@ -42,3 +42,6 @@ def add_aircraft():
     except IntegrityError:
         db.session.rollback()
         return { 'Error': 'Oh no, an unexpected error occurred!' }, 500
+    
+
+    
