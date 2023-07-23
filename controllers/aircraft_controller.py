@@ -14,7 +14,7 @@ def get_all_aircraft():
     return aircraftz_schema.dump(all_aircraft)
 
 @aircraft_bp.route('/', methods=['POST'])
-def register_aircraft():
+def add_aircraft():
     # Load given aircraft data from the request
     aircraft_data = aircraft_schema.load(request.get_json())
     

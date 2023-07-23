@@ -11,6 +11,7 @@ class Pilot(db.Model):
     password = db.Column(db.String, nullable=False)
     status = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    
 
     flights = db.relationship('Flight', back_populates='pilot')
-    # expirations = db.relationship('Expirations', back_populates='pilot')
+    expirations = db.relationship('Expirations', back_populates='pilot')

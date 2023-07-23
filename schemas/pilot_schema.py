@@ -6,7 +6,7 @@ from marshmallow.validate import Email, OneOf
 VALID_STATUSES = ('active', 'inactive')
 
 
-class PilotSchema(ma.Schema):    
+class PilotSchema(ma.Schema):
     email = fields.String(validate=Email(
         error='Oops, try again! Your email seems wrong'
         )

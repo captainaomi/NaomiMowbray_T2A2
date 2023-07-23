@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from init import db, bcrypt
 from models.pilot import Pilot
 from schemas.pilot_schema import pilot_schema, pilots_schema
+from controllers.expirations_controller import expirations_bp
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
@@ -9,13 +10,14 @@ from datetime import timedelta
 
 
 pilots_bp = Blueprint('pilot', __name__, url_prefix='/pilots')
+pilots_bp.register_blueprint(expirations_bp)
 
 
 @pilots_bp.route('/')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
-    pilots = db.session.scalars(stmt)
-    return pilots_schema.dump(pilots)
+    all_pilots = db.session.scalars(stmt)
+    return pilots_schema.dump(all_pilots)
 
 @pilots_bp.route('/register', methods=['POST'])
 def register_pilot():
