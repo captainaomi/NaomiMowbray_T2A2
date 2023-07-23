@@ -3,7 +3,8 @@ from init import db
 from models.expirations import Expirations
 from models.pilot import Pilot
 from schemas.expirations_schema import expirations_schema, expirationsz_schema
-from sqlalchemy.exc import DataError
+from functions.admin_auth import admin_authorisation
+from sqlalchemy.exc import DataError, IntegrityError
 from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -56,12 +57,16 @@ def add_expirations(pilot_id):
         # Congrats! Return the added pilot expirations!
         return expirations_schema.dump(expirations), 201
     
-    except DataError as err:
+    except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_DATETIME_FORMAT:
                 return {
                     'Error': 'That date looks funny; it should be YYYY-MM-DD'
                     }, 406
+            elif err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
+                return {
+                     'Error': f'{err.orig.diag.column_name} is missing' 
+                     }, 406
         else:
             return {
                 'Error': 'Oh no, some weird error happened!' }, 500
@@ -69,3 +74,43 @@ def add_expirations(pilot_id):
     # TypeError message doesn't actually work yet, still not sure why?
     except TypeError:
         return {'Error': 'A TypeError occurred; please check your data.'}, 400
+    
+
+
+@expirations_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+@admin_authorisation
+def delete_expirations(id):
+    stmt = db.select(Expirations).filter_by(id=id)
+    expirations = db.session.scalar(stmt)
+    if expirations:
+        db.session.delete(expirations)
+        db.session.commit()
+        return {'Confirmation': f'Expirations {expirations.pilot} deleted successfully'} # Not sure if pilot will work?
+    else:
+        return {'Error': f'Uh-oh, no expirations found with id {id}'}, 404
+
+
+@expirations_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+@admin_authorisation
+def update_expirations(id):
+    expirations_data = expirations_schema.load(request.get_json(), partial=True)
+    stmt = db.select(Expirations).filter_by(id=id)
+    expirations = db.session.scalar(stmt)
+    if expirations:
+        expirations.medical = expirations_data.get(
+            'medical') or expirations.medical
+        expirations.biannual_review = expirations_data.get(
+            'biannual_review') or expirations.biannual_review
+        expirations.company_review = expirations_data.get(
+            'company_review') or expirations.company_review
+        expirations.dangerous_goods = expirations_data.get(
+            'dangerous_goods') or expirations.dangerous_goods
+        expirations.asic = expirations_data.get(
+            'asic') or expirations.asic
+
+        db.session.commit()
+        return expirations_schema.dump(expirations)
+    else:
+        return {'Error': f'Uh-oh, no expirations found with id {id}'}, 404

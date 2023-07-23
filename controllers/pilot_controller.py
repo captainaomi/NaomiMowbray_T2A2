@@ -4,6 +4,8 @@ from models.pilot import Pilot
 from schemas.pilot_schema import pilot_schema, pilots_schema
 from controllers.expirations_controller import expirations_bp
 from flask_jwt_extended import create_access_token
+from functions.admin_auth import admin_authorisation
+from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
 from datetime import timedelta
@@ -18,6 +20,7 @@ def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
     all_pilots = db.session.scalars(stmt)
     return pilots_schema.dump(all_pilots)
+
 
 @pilots_bp.route('/register', methods=['POST'])
 def register_pilot():
@@ -85,3 +88,42 @@ def login_pilot():
         return {
             'Error': 'Looks like your email or password is incorrect'
             }, 418
+    
+
+@pilots_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+@admin_authorisation
+def delete_pilot(id):
+    stmt = db.select(Pilot).filter_by(id=id)
+    pilot = db.session.scalar(stmt)
+    if pilot:
+        db.session.delete(pilot)
+        db.session.commit()
+        return {'Confirmation': f'Pilot {pilot.name} deleted successfully'}
+    else:
+        return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
+    
+    
+@pilots_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+@admin_authorisation
+def update_pilot(id):
+    pilot_data = pilot_schema.load(request.get_json(), partial=True)
+    stmt = db.select(Pilot).filter_by(id=id)
+    pilot = db.session.scalar(stmt)
+    if pilot:
+        pilot.arn = pilot_data.get('arn') or pilot.arn
+        pilot.name = pilot_data.get('name') or pilot.name
+        pilot.email = pilot_data.get('email') or pilot.email
+        pilot.status = pilot_data.get('status') or pilot.status
+        pilot.is_admin = pilot_data.get('is_admin') or pilot.is_admin
+        db.session.commit()
+        # Serialize the new pilot using the schema 
+        # without the password field, by using pop
+        serialized_pilot = pilot_schema.dump(pilot)
+        serialized_pilot.pop('password')
+        
+        # Congrats! Return the new pilot!
+        return jsonify(serialized_pilot), 201
+    else:
+        return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
