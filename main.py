@@ -3,6 +3,7 @@ import os
 from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
 from controllers.pilot_controller import pilots_bp
+from controllers.aircraft_controller import aircraft_bp
 from marshmallow.exceptions import ValidationError
 
 
@@ -33,6 +34,7 @@ def create_app():
 
     app.register_blueprint(db_commands)
     app.register_blueprint(pilots_bp)
+    app.register_blueprint(aircraft_bp)
     # app.register_blueprint(flights_bp)
 
     return app

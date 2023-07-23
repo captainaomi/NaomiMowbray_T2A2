@@ -1,11 +1,17 @@
 from init import ma
 from marshmallow import fields
-from marshmallow.validate import Email, Length
+from marshmallow.validate import Email, OneOf
+
+
+VALID_STATUSES = ('active', 'inactive')
 
 
 class PilotSchema(ma.Schema):    
-    email = fields.String(validate=
-        Email(error='Oops, try again! Your email seems wrong'))
+    email = fields.String(validate=Email(
+        error='Oops, try again! Your email seems wrong'
+        )
+    )
+    status = fields.String(required=True, validate=OneOf(VALID_STATUSES))
 
     class Meta:
         fields = (
@@ -13,7 +19,8 @@ class PilotSchema(ma.Schema):
             'arn', 
             'name', 
             'email', 
-            'password', 
+            'password',
+            'status', 
             'is_admin'
             )
 

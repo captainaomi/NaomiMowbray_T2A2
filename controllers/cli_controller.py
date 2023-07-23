@@ -6,7 +6,9 @@ from models.aircraft import Aircraft
 # from models.expirations import Expirations
 from datetime import datetime, date
 
+
 db_commands = Blueprint('db', __name__)
+
 
 @db_commands.cli.command('create')
 def create_db():
@@ -22,34 +24,46 @@ def drop_db():
 def seed_db():
     pilots = [
         Pilot(
-            arn=12345,
+            arn=100,
             name='Chief Pilot',
-            email='admin@captain.com',
+            email='chief@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
+            status='active',
             is_admin=True
         ),
         Pilot(
-            arn='1079046',
+            arn='101',
             name='Captain Naomi',
             email='naomi@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
+            status='active'
+        ),
+        Pilot(
+            arn='102',
+            name='Captain Hook',
+            email='hook@captain.com',
+            password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
+            status='inactive'
         )
     ]
     db.session.add_all(pilots)
 
     aircraftz = [
         Aircraft(
-            callsign='VH-CAX'
+            callsign='VH-CAX',
+            status='active'
         ),
         Aircraft(
-            callsign='VH-DEV'
-
+            callsign='VH-DEV',
+            status='active'
         ),
         Aircraft(
-            callsign='VH-WEB'
+            callsign='VH-WEB',
+            status='active'
         ),
         Aircraft(
-            callsign='VH-API'
+            callsign='VH-API',
+            status='inactive'
         )
     ]
     db.session.add_all(aircraftz)
