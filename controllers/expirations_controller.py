@@ -11,7 +11,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 # This route is initially registered under pilots_bp, 
 # so it's actual route will be /pilots/pilot_id/expirations
 expirations_bp = Blueprint(
-    'expirations',__name__, url_prefix='/<int:pilot_id>/expirations')
+    'expirations',__name__, url_prefix='/<int:pilot_id>/expirations'
+    )
 
 
 @expirations_bp.route('/')
@@ -58,7 +59,13 @@ def add_expirations(pilot_id):
     except DataError as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_DATETIME_FORMAT:
-                return { 'Error': 'That date looks a lil funny' }, 418
+                return {
+                    'Error': 'That date looks funny; it should be YYYY-MM-DD'
+                    }, 406
         else:
             return {
                 'Error': 'Oh no, some weird error happened!' }, 500
+        
+    except TypeError:
+        # Custom error message for TypeError
+        return {'Error': 'A TypeError occurred; please check your data.'}, 400
