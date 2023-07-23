@@ -4,8 +4,8 @@ from marshmallow.validate import Email, Length
 
 
 class PilotSchema(ma.Schema):    
-    email = fields.String(validate=Email)
-    password = fields.String(validate=Length(min=6))
+    email = fields.String(validate=
+        Email(error='Oops, try again! Your email seems wrong'))
 
     class Meta:
         fields = (
@@ -17,6 +17,5 @@ class PilotSchema(ma.Schema):
             'is_admin'
             )
 
-
-pilot_schema = PilotSchema(exclude=['password'])
+pilot_schema = PilotSchema()
 pilots_schema = PilotSchema(many=True, exclude=['password'])
