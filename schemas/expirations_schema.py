@@ -4,15 +4,11 @@ from marshmallow import fields
 
 class ExpirationsSchema(ma.Schema):
     pilot = fields.Nested('PilotSchema', only=['name'])
-    medical = fields.Date(
-        format='%Y-%m-%d',
-        error='That date looks a lil funny, want to check it?',
-        required=True
-        )
-    biannual_review = fields.Date(format='%Y-%m-%d', required=True)
-    company_review = fields.Date(format='%Y-%m-%d', required=True)
-    dangerous_goods = fields.Date(format='%Y-%m-%d', required=True)
-    asic = fields.Date(format='%Y-%m-%d')
+    medical = fields.Date(format='%Y-%m-%-d', required=True)
+    biannual_review = fields.Date(format='%Y-%m-%-d', required=True)
+    company_review = fields.Date(format='%Y-%m-%-d', required=True)
+    dangerous_goods = fields.Date(format='%Y-%m-%-d', required=True)
+    asic = fields.Date(format='%Y-%m-%-d')
 
     class Meta:
         fields = (

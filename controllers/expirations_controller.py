@@ -32,7 +32,7 @@ def add_expirations(pilot_id):
     
     #If there's no pilot that matches the pilot_id
     if not pilot:
-        return { 'Error': f'Dang, no pilot with id {id} was found' }, 404
+        return { 'Error': f'Dang, no pilot with that id was found' }, 404
 
     try:
         # Create a new expirations model from the given data
@@ -63,6 +63,10 @@ def add_expirations(pilot_id):
                 return {
                     'Error': 'That date looks funny; it should be YYYY-MM-DD'
                     }, 406
+            elif err.orig.pgcode == errorcodes.DATETIME_FIELD_OVERFLOW:
+                return {
+                    'Error': 'Umm, are you sure that is a real date..?'
+                    }, 406            
             elif err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
                 return {
                      'Error': f'{err.orig.diag.column_name} is missing' 
@@ -71,9 +75,9 @@ def add_expirations(pilot_id):
             return {
                 'Error': 'Oh no, some weird error happened!' }, 500
     
-    # TypeError message doesn't actually work yet, still not sure why?
-    except TypeError:
-        return {'Error': 'A TypeError occurred; please check your data.'}, 400
+    # # TypeError message doesn't actually work yet, still not sure why?
+    # except ValueError:
+    #     return {'Error': 'A TypeError occurred; please check your data.'}, 400
     
 
 
