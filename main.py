@@ -35,6 +35,6 @@ def create_app():
     app.register_blueprint(db_commands)
     app.register_blueprint(pilots_bp)
     app.register_blueprint(aircraft_bp)
-    # app.register_blueprint(flights_bp)
+
 
     return app

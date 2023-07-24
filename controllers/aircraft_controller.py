@@ -2,12 +2,14 @@ from flask import Blueprint, request
 from init import db
 from models.aircraft import Aircraft
 from schemas.aircraft_schema import aircraft_schema, aircraftz_schema
+from controllers.flight_controller import flights_bp
 from functions.admin_auth import admin_authorisation
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
 
 aircraft_bp = Blueprint('aircraft', __name__, url_prefix='/aircraft')
+aircraft_bp.register_blueprint(flights_bp)
 
 @aircraft_bp.route('/')
 def get_all_aircraft():

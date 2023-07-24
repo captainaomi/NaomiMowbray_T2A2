@@ -30,9 +30,9 @@ def add_expirations(pilot_id):
     stmt = db.select(Pilot).filter_by(id=pilot_id)
     pilot = db.session.scalar(stmt)
     
-    #If there's a pilot that matches the pilot_id
+    #If there's no pilot that matches the pilot_id
     if not pilot:
-        return { 'Error': 'Oops, that pilot was not found' }, 404
+        return { 'Error': f'Dang, no pilot with id {id} was found' }, 404
 
     try:
         # Create a new expirations model from the given data
