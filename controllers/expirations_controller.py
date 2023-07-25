@@ -9,34 +9,38 @@ from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-# This route is initially registered under pilots_bp, 
-# so it's actual route will be /pilots/pilot_id/expirations
 expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
 
 
 @expirations_bp.route('/')
-def get_expirations():
+def all_pilot_expirations():
     stmt = db.select(Expirations)
     pilot_expirations = db.session.scalars(stmt)
     return expirationsz_schema.dump(pilot_expirations)
 
-@expirations_bp.route('/<int:pilot_id>')
-def get_one_card(pilot_id):
+
+@expirations_bp.route('/pilot/<int:pilot_id>')
+def single_pilot_expirations(pilot_id):
+    # Check if the pilot_id given in the route 
+    # is an existing pilot with expirations
     stmt = db.select(Expirations).filter_by(pilot_id=pilot_id) 
     pilot_expirations = db.session.scalar(stmt)
     if pilot_expirations:
         return expirations_schema.dump(pilot_expirations)
     else:
-        return {'Error': f'No expirations for pilot {pilot_id}'}, 404
+        return {
+            'Error': f'Please check the pilot id; '
+            'either they do not exist or have no expirations yet'}, 404
 
 
-@expirations_bp.route('/', methods=['POST'])
+@expirations_bp.route('/pilot/<int:pilot_id>', methods=['POST'])
 @jwt_required()
 @admin_authorisation
 def add_expirations(pilot_id):
     # Load given expirations data from the request
     expirations_data = request.get_json()
-    stmt = db.select(Expirations).filter_by(id=pilot_id)
+    # Check if the pilot_id given in the route is an existing pilot
+    stmt = db.select(Pilot).filter_by(id=pilot_id)
     pilot = db.session.scalar(stmt)
     
     #If there's no pilot that matches the pilot_id
@@ -82,12 +86,7 @@ def add_expirations(pilot_id):
                      }, 406
         else:
             return {
-                'Error': 'Oh no, some weird error happened!' }, 500
-    
-    # # TypeError message doesn't actually work yet, still not sure why?
-    # except ValueError:
-    #     return {'Error': 'A TypeError occurred; please check your data.'}, 400
-    
+                'Error': 'Oh no, some weird error happened!' }, 500    
 
 
 @expirations_bp.route('/<int:id>', methods=['DELETE'])

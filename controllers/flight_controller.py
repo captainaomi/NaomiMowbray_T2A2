@@ -11,8 +11,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 # This route is initially registered under aircraft_bp, 
-# so it's actual route will be /aircraft/aircraft_id/expirations
+# so it's actual route will be /aircraft/aircraft_id/flights
 flights_bp = Blueprint('flights', __name__, url_prefix='<int:aircraft_id>/flights')
+
 
 @flights_bp.route('/')
 def get_all_flights():

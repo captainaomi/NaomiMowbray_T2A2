@@ -12,6 +12,7 @@ from datetime import timedelta
 
 pilots_bp = Blueprint('pilot', __name__, url_prefix='/pilots')
 
+
 @pilots_bp.route('/')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
