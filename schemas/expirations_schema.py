@@ -3,7 +3,7 @@ from marshmallow import fields
 
 
 class ExpirationsSchema(ma.Schema):
-    pilot = fields.Nested('PilotSchema', only=['name'])
+    pilot = fields.Nested('PilotSchema', only=['id', 'name'])
     medical = fields.Date(format='%Y-%m-%-d', required=True)
     biannual_review = fields.Date(format='%Y-%m-%-d', required=True)
     company_review = fields.Date(format='%Y-%m-%-d', required=True)

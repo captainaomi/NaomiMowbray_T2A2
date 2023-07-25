@@ -11,23 +11,32 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # This route is initially registered under pilots_bp, 
 # so it's actual route will be /pilots/pilot_id/expirations
-expirations_bp = Blueprint(
-    'expirations',__name__, url_prefix='/<int:pilot_id>/expirations'
-    )
+expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
 
 
 @expirations_bp.route('/')
-def get_all_pilots():
-    stmt = db.select(Expirations).order_by(Expirations.id)
-    all_expirations = db.session.scalars(stmt)
-    return expirationsz_schema.dump(all_expirations)
+def get_expirations():
+    stmt = db.select(Expirations)
+    pilot_expirations = db.session.scalars(stmt)
+    return expirationsz_schema.dump(pilot_expirations)
+
+@expirations_bp.route('/<int:pilot_id>')
+def get_one_card(pilot_id):
+    stmt = db.select(Expirations).filter_by(pilot_id=pilot_id) 
+    pilot_expirations = db.session.scalar(stmt)
+    if pilot_expirations:
+        return expirations_schema.dump(pilot_expirations)
+    else:
+        return {'Error': f'No expirations for pilot {pilot_id}'}, 404
+
 
 @expirations_bp.route('/', methods=['POST'])
 @jwt_required()
+@admin_authorisation
 def add_expirations(pilot_id):
     # Load given expirations data from the request
     expirations_data = request.get_json()
-    stmt = db.select(Pilot).filter_by(id=pilot_id)
+    stmt = db.select(Expirations).filter_by(id=pilot_id)
     pilot = db.session.scalar(stmt)
     
     #If there's no pilot that matches the pilot_id

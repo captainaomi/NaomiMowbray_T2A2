@@ -29,9 +29,9 @@ def add_flight(aircraft_id): # seems to be an issue here?
     stmt = db.select(Aircraft).filter_by(id=aircraft_id)
     aircraft = db.session.scalar(stmt)
     
-    #If there's no aircraft that matches the pilot_id
+    #If there's no aircraft that matches the aircraft_id
     if not aircraft:
-        return { 'Error': f'Oops, no aircraft with id {id} was found' }, 404
+        return { 'Error': f'Oops, no aircraft with id {aircraft_id} was found' }, 404
 
     try:
         # Create a new flight model from the given data
