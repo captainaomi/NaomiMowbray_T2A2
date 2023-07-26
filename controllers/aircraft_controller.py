@@ -5,6 +5,7 @@ from schemas.aircraft_schema import aircraft_schema, aircraftz_schema
 from functions.admin_auth import admin_authorisation
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
+from psycopg2 import errorcodes
 
 
 aircraft_bp = Blueprint('aircraft', __name__, url_prefix='/aircraft')
@@ -45,6 +46,7 @@ def add_aircraft():
     existing_aircraft = Aircraft.query.filter_by(
         callsign=aircraft_data['callsign']).first()
 
+# # # # # # # # # # DOES THIS NEED TO BE IN THE TRY BLOCK?????
     if existing_aircraft:
         return { 'Error': 'That aircraft already exists.' }, 409
 
@@ -62,11 +64,11 @@ def add_aircraft():
         # Congrats! Return the shiny new aircraft!
         return aircraft_schema.dump(new_aircraft), 201
     
-    except IntegrityError:
-        db.session.rollback()
+    except:
         return { 'Error': 'Oh no, an unexpected error occurred!' }, 500
     
 
+# DELETE method to delete an aircraft, using the id from route
 @aircraft_bp.route('/<int:id>', methods=['DELETE'])
 # Check user login, as this is an admin only method
 @jwt_required()
@@ -82,6 +84,7 @@ def delete_aircraft(id):
         return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
     
     
+# PUT and/or PATCH method to update or edit an aircraft, using the id from route
 @aircraft_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check user login, as this is an admin only method
 @jwt_required()
@@ -91,11 +94,20 @@ def update_aircraft(id):
     aircraft_data = aircraft_schema.load(request.get_json(), partial=True)
     stmt = db.select(Aircraft).filter_by(id=id)
     aircraft = db.session.scalar(stmt)
-    if aircraft:
-        aircraft.callsign = aircraft_data.get('callsign') or aircraft.callsign
-        aircraft.status = aircraft_data.get('status') or aircraft.status
+    try:
+        if aircraft:
+            aircraft.callsign = aircraft_data.get('callsign') or aircraft.callsign
+            aircraft.status = aircraft_data.get('status') or aircraft.status
 
-        db.session.commit()
-        return aircraft_schema.dump(aircraft), 201
-    else:
-        return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+            db.session.commit()
+            return aircraft_schema.dump(aircraft), 201
+        else:
+            return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+    except IntegrityError as err:
+        if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
+            if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+                return {
+                    'Error': 'No can do; that arn or email is already in use.' 
+                    }, 409
+        else:
+            return { 'Error': 'Oh no, a mystery error occurred!' }, 500

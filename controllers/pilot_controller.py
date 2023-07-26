@@ -123,7 +123,7 @@ def login_pilot():
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
 
-# DELETE method to delete a pilot
+# DELETE method to delete a pilot, using the id from route
 @pilots_bp.route('/<int:id>', methods=['DELETE'])
 # Check user login, as this is an admin only method
 @jwt_required()
@@ -144,7 +144,7 @@ def delete_pilot(id):
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
     
-# PUT and/or PATCH method to update or edit a pilot
+# PUT and/or PATCH method to update or edit a pilot, using the id from route
 @pilots_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check user login, as this is an admin only method
 @jwt_required()
