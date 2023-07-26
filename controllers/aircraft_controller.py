@@ -19,6 +19,8 @@ def get_all_aircraft():
 
 
 @aircraft_bp.route('/', methods=['POST'])
+@jwt_required()
+@admin_authorisation
 def add_aircraft():
     # Load given aircraft data from the request
     aircraft_data = aircraft_schema.load(request.get_json())

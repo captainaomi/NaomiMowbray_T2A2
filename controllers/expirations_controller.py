@@ -11,14 +11,14 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
 
-
+# GET method to view all pilots in database
 @expirations_bp.route('/')
 def all_pilot_expirations():
     stmt = db.select(Expirations)
     pilot_expirations = db.session.scalars(stmt)
     return expirationsz_schema.dump(pilot_expirations)
 
-
+# GET method to view a single pilot in database, using their id
 @expirations_bp.route('/pilot/<int:pilot_id>')
 def single_pilot_expirations(pilot_id):
     # Check if the pilot_id given in the route 
@@ -45,12 +45,12 @@ def add_expirations(pilot_id):
     
     #If there's no pilot that matches the pilot_id
     if not pilot:
-        return { 'Error': f'Dang, no pilot with that id was found' }, 404
+        return { 'Error': 'Dang, no pilot with that id was found' }, 404
 
     try:
         # Create a new expirations model from the given data
         expirations = Expirations(
-            pilot_id = get_jwt_identity(),
+            pilot_id = pilot.id,
             medical = expirations_data.get('medical'),
             biannual_review = expirations_data.get(
                 'biannual_review'),
@@ -84,9 +84,17 @@ def add_expirations(pilot_id):
                 return {
                      'Error': f'{err.orig.diag.column_name} is missing' 
                      }, 406
+            elif err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+                return {
+                    'Error': f'Pilot {pilot_id} already has expirations info; '
+                    'please edit instead if they need updating'
+                    }, 409
         else:
             return {
                 'Error': 'Oh no, some weird error happened!' }, 500    
+
+    except AttributeError:
+        return {'Error': 'You need to login, silly!' }, 400  
 
 
 @expirations_bp.route('/<int:id>', methods=['DELETE'])

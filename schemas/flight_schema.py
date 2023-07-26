@@ -7,20 +7,12 @@ from marshmallow.exceptions import ValidationError
 
 class FlightSchema(ma.Schema):
     pilot = fields.Nested('PilotSchema', only=['id', 'name'])
-    aircraft = fields.Nested('AircraftSchema', only=['callsign'], required=True)
-    date = fields.DateTime(format='%Y-%m-%-d', required=True)
-   
-    @validates('aircraft_id')
-    def validate_callsign(self, value):
-            stmt = db.select(db.func.count()).select_from(Aircraft).filter_by(id=value)
-            count=db.session.scalar(stmt)
-            if count < 1 :
-                raise ValidationError('Uh-oh, no aircraft with that id exists')
+    aircraft = fields.Nested('AircraftSchema', only=['id', 'callsign'], required=True)
+    date = fields.Date(format='%Y-%m-%d', required=True)
 
     route = fields.String(required=True, validate=And(
         Length(
             min=10,
-            max=100,
             error='Route must between 10-100 characters long'
             ),
         Regexp(
@@ -46,23 +38,9 @@ flight_schema = FlightSchema()
 flights_schema = FlightSchema(many=True)
 
 
-    # # Check if that aircraft exists
-    # @validates('aircraft_id')
-    # def validate_callsign(self, data):
+    # @validates('aircraft')
+    # def validate_callsign(self, value):
     #         stmt = db.select(db.func.count()).select_from(Aircraft).filter_by(id=value)
     #         count=db.session.scalar(stmt)
     #         if count < 1 :
-    #             raise ValidationError('Uh-oh, no aircraft with that id exists')
-
-    # route = fields.String(required=True, validate=And(
-    #     Length(
-    #         min=10,
-    #         max=100,
-    #         error='Route must between 10-100 characters long'
-    #         ),
-    #     Regexp(
-    #         '^[a-zA-Z0-9.\-_. ]+$',
-    #         error='Please only use letters, numbers, dashes or spaces'
-    #         )
-    #     )
-    # )
+    #             raise ValidationError

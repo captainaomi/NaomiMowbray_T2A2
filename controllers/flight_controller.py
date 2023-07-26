@@ -20,27 +20,56 @@ def get_all_flights():
 
 
 @flights_bp.route('/', methods=['POST'])
-@jwt_required
+@jwt_required()
 def add_flight():
+
+    pilot_id = get_jwt_identity()
+    pilot = Pilot.query.get(pilot_id)
+
+    if not pilot:
+        return {
+            'Error': 'Cheeeeeeky! Not sure how you got here, '
+            "as that's an invalid id!"}, 403
+    
     # Load given flight data from the request
     flight_data = flight_schema.load(request.get_json())
 
+    # Check if aircraft_id is an existing aircraft
+    aircraft_id = flight_data.get('aircraft', {}).get('id')
+    if aircraft_id:
+        aircraft = Aircraft.query.get(aircraft_id)
+
+        #If there's no aircraft that matches the aircraft_id, give below error
+        if not aircraft:
+            return {
+                'Error': 'Uh-oh, no aircraft with that id exists'
+                }, 404
+        
+    #If aircraft_id is missing or not an integer, give below error
+    else: 
+        return {
+            'Error': 'Uh-oh, that seems to be an invalid id'
+            }, 404
+    
     try:
         # Create a new flight model from the given data
         new_flight = Flight(
-            pilot = get_jwt_identity(),
-            aircraft = flight_data.get('aircraft_id'),
+            pilot_id = get_jwt_identity(),
+            aircraft_id = aircraft.id,
             date = flight_data.get('date'),
             route = flight_data.get('route'),
             landings = flight_data.get('landings'),
             flight_time = flight_data.get('flight_time')
-        )
+            )
             
         # Add the new flight to the session
         db.session.add(new_flight)
         # Commit to add the new flight to the database
         db.session.commit()
 
+        # Congrats! Return the new flight!
+        return flight_schema.dump(new_flight), 201
+    
     # For errors, give the fowllowing applicable messages:
     except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):

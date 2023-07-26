@@ -8,4 +8,4 @@ class Aircraft(db.Model):
     callsign = db.Column(db.String(10), nullable=False, unique=True)
     status = db.Column(db.String, nullable=False)
 
-    flights = db.relationship('Flight', back_populates='aircraft')
+    flight = db.relationship('Flight', back_populates='aircraft')
