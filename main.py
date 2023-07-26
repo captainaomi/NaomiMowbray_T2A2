@@ -5,6 +5,7 @@ from controllers.cli_controller import db_commands
 from controllers.pilot_controller import pilots_bp
 from controllers.aircraft_controller import aircraft_bp
 from controllers.expirations_controller import expirations_bp
+from controllers.flight_controller import flights_bp
 from marshmallow.exceptions import ValidationError
 
 
@@ -17,15 +18,17 @@ def create_app():
 
     @app.errorhandler(ValidationError)
     def validation_error(err):
-        return {'error': err.messages}, 400
+        return {'Error': err.messages}, 400
+
 
     @app.errorhandler(400)
     def bad_request(err):
-        return {'error': str(err)}, 400
+        return {'Error': str(err)}, 400
+    
     
     @app.errorhandler(404)
     def not_found(err):
-        return {'error': str(err)}, 404
+        return {'Error': str(err)}, 404
 
 
     db.init_app(app)
@@ -33,9 +36,12 @@ def create_app():
     bcrypt.init_app(app)
     jwt.init_app(app)
 
+
     app.register_blueprint(db_commands)
     app.register_blueprint(pilots_bp)
     app.register_blueprint(aircraft_bp)
     app.register_blueprint(expirations_bp)
+    app.register_blueprint(flights_bp)
+
 
     return app

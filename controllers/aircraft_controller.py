@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 
 
 aircraft_bp = Blueprint('aircraft', __name__, url_prefix='/aircraft')
-aircraft_bp.register_blueprint(flights_bp)
 
 
 @aircraft_bp.route('/')
@@ -17,6 +16,7 @@ def get_all_aircraft():
     stmt = db.select(Aircraft).order_by(Aircraft.id)
     all_aircraft = db.session.scalars(stmt)
     return aircraftz_schema.dump(all_aircraft)
+
 
 @aircraft_bp.route('/', methods=['POST'])
 def add_aircraft():

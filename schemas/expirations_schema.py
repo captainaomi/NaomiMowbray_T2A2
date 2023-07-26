@@ -20,7 +20,7 @@ class ExpirationsSchema(ma.Schema):
             'dangerous_goods',
             'asic'
             )
-        ordered = True
+
 
 expirations_schema = ExpirationsSchema()
 expirationsz_schema = ExpirationsSchema(many=True)
