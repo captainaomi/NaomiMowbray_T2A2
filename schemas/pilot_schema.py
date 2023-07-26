@@ -7,7 +7,7 @@ VALID_STATUSES = ('active', 'inactive')
 
 
 class PilotSchema(ma.Schema):
-    email = fields.String(validate=Email(
+    email = fields.String(required=True, validate=Email(
         error='Oops, try again! Your email seems wrong'
         )
     )

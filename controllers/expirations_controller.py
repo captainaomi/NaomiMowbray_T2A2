@@ -34,6 +34,7 @@ def single_pilot_expirations(pilot_id):
 
 
 @expirations_bp.route('/pilot/<int:pilot_id>', methods=['POST'])
+# Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def add_expirations(pilot_id):
@@ -98,6 +99,7 @@ def add_expirations(pilot_id):
 
 
 @expirations_bp.route('/<int:id>', methods=['DELETE'])
+# Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def delete_expirations(id):
@@ -112,6 +114,7 @@ def delete_expirations(id):
 
 
 @expirations_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+# Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def update_expirations(id):

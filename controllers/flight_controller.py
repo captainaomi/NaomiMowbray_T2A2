@@ -12,20 +12,42 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 flights_bp = Blueprint('flights', __name__, url_prefix='/flights')
 
 
+# GET method to view all flights in database
 @flights_bp.route('/')
 def get_all_flights():
     stmt = db.select(Flight).order_by(Flight.id)
     all_flights = db.session.scalars(stmt)
-    return flights_schema.dump(all_flights)
+    return flights_schema.dump(all_flights), 201
 
 
+# GET method to view a single flight in database, using the flight id
+@flights_bp.route('/<int:id>')
+def get_one_flight(id):
+    # Check if the flight_id given in the route is correct
+    stmt = db.select(Flight).filter_by(id=id) 
+    flight = db.session.scalar(stmt)
+    # If there's a flight that matches the id, give that flight
+    if flight:
+        return flight_schema.dump(flight), 201
+    
+    # If there's no flight that matches the id, give an error instead
+    else:
+        return {
+            'Error': f'{id} is not a valid flight id, soz Captain!'}, 404
+    
+# POST method to create a flight
 @flights_bp.route('/', methods=['POST'])
+# Check the logged in pilot
 @jwt_required()
-def add_flight():
 
+def add_flight():
+    # Get the authenticated pilot's identity for the flight,
+    # as pilots can only create their own flights
     pilot_id = get_jwt_identity()
+    # Fetch the Pilot object corresponding to the pilot_id
     pilot = Pilot.query.get(pilot_id)
 
+    # Just in case it's an invalid login and they snuck their way in!
     if not pilot:
         return {
             'Error': 'Cheeeeeeky! Not sure how you got here, '
@@ -34,9 +56,10 @@ def add_flight():
     # Load given flight data from the request
     flight_data = flight_schema.load(request.get_json())
 
-    # Check if aircraft_id is an existing aircraft
-    aircraft_id = flight_data.get('aircraft', {}).get('id')
+    # Ensure aircraft_id is an integer to search through Aircraft objects
+    aircraft_id = int(flight_data.get('aircraft_id'))
     if aircraft_id:
+        # Search for corresponding aircraft with that id
         aircraft = Aircraft.query.get(aircraft_id)
 
         #If there's no aircraft that matches the aircraft_id, give below error
@@ -44,18 +67,19 @@ def add_flight():
             return {
                 'Error': 'Uh-oh, no aircraft with that id exists'
                 }, 404
-        
+
+# # # # # # # # # # # #   DO I NEED THIS?????
     #If aircraft_id is missing or not an integer, give below error
     else: 
         return {
             'Error': 'Uh-oh, that seems to be an invalid id'
             }, 404
-    
+
     try:
         # Create a new flight model from the given data
         new_flight = Flight(
-            pilot_id = get_jwt_identity(),
-            aircraft_id = aircraft.id,
+            pilot = pilot,
+            aircraft = aircraft,
             date = flight_data.get('date'),
             route = flight_data.get('route'),
             landings = flight_data.get('landings'),
@@ -67,10 +91,19 @@ def add_flight():
         # Commit to add the new flight to the database
         db.session.commit()
 
-        # Congrats! Return the new flight!
-        return flight_schema.dump(new_flight), 201
+        # Ensure the callsign, pilot's data and flight_id are included 
+        # in the returned JSON data
+        flight_data['aircraft_callsign'] = aircraft.callsign
+        flight_data['pilot'] = {
+            'id': pilot.id,
+            'name': pilot.name
+        }
+        flight_data['id'] = new_flight.id  # Include the flight_id
+
+        # We did it! Return the new flight!
+        return flight_schema.dump(flight_data), 201
     
-    # For errors, give the fowllowing applicable messages:
+    # For errors, have the following applicable messages ready to roll:
     except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
@@ -87,4 +120,20 @@ def add_flight():
                      }, 406
         else:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+        
 
+# # DELETE method to delete a flight
+# @aircraft_bp.route('/<int:id>', methods=['DELETE'])
+# # Check user login, as this is an admin only method
+# @jwt_required()
+# @admin_authorisation
+
+# def delete_aircraft(id):
+#     stmt = db.select(Aircraft).filter_by(id=id)
+#     aircraft = db.session.scalar(stmt)
+#     if aircraft:
+#         db.session.delete(aircraft)
+#         db.session.commit()
+#         return {'Confirmation': f'Aircraft {aircraft.callsign} deleted successfully'}, 201
+#     else:
+#         return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404

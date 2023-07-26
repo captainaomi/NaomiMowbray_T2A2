@@ -14,7 +14,7 @@ class Flight(db.Model):
     date = db.Column(db.Date, nullable=False)
     route = db.Column(db.String(100), nullable=False)
     landings = db.Column(db.Integer, nullable=False)
-    flight_time = db.Column(db.DECIMAL(5,2), nullable=False)
+    flight_time = db.Column(db.DECIMAL(4,2), nullable=False) # are the decimal parameters redundant here??
 
 
     pilot = db.relationship('Pilot', back_populates='flight')
