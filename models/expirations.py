@@ -1,5 +1,6 @@
 from init import db
 
+
 class Expirations(db.Model):
     __tablename__ = "expirations"
 

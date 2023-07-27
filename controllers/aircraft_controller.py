@@ -76,13 +76,16 @@ def add_aircraft():
 def delete_aircraft(id):
     stmt = db.select(Aircraft).filter_by(id=id)
     aircraft = db.session.scalar(stmt)
-    if aircraft:
-        db.session.delete(aircraft)
-        db.session.commit()
-        return {'Confirmation': f'Aircraft {aircraft.callsign} deleted successfully'}, 201
-    else:
-        return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
-    
+    try:
+        if aircraft:
+            db.session.delete(aircraft)
+            db.session.commit()
+            return {'Confirmation': f'Aircraft {aircraft.callsign} deleted successfully'}, 201
+        else:
+            return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+    # Catch any sneaky errors that might pop up in future
+    except:
+        return { 'Error': 'Oh no, a mystery error occurred!' }, 500
     
 # PUT and/or PATCH method to update or edit an aircraft, using the id from route
 @aircraft_bp.route('/<int:id>', methods=['PUT', 'PATCH'])

@@ -20,6 +20,47 @@ def get_all_flights():
     return flights_schema.dump(all_flights), 201
 
 
+# GET method to view all flights for a specific aircraft, 
+# using the aircraft id
+@flights_bp.route('/aircraft/<int:aircraft_id>')
+def aircraft_specific_flights(aircraft_id):
+    # Check if the flight_id given in the route is correct
+    stmt = db.select(Flight).filter_by(aircraft_id=aircraft_id)
+    aircraft_flights = db.session.scalars(stmt)
+    # If there are any flights that match the id, give those flights
+    if aircraft_flights:
+        return flights_schema.dump(aircraft_flights), 201
+    
+    # If there's no flight that matches the aircraft id, give an error instead
+    else:
+        return {
+            'Error': f'{aircraft_id} is not a valid aircraft id, soz Captain!'}, 404
+
+
+# GET method to view all flights for a specific pilot, 
+# using the pilot's id
+@flights_bp.route('/pilot/<int:pilot_id>')
+def pilot_specific_flights(pilot_id):
+    # Check if the flight_id given in the route is correct
+    stmt = db.select(Flight).filter_by(pilot_id=pilot_id) 
+    pilot_flights = db.session.scalars(stmt)
+
+    # If there are any flights that match the id, give those flights
+    if not pilot_flights:
+        return {
+            'Error': 
+            f"Looks like pilot {pilot_id} hasn't completed any flights yet"
+            }, 404
+
+    elif pilot_flights:
+        return flights_schema.dump(pilot_flights), 201
+    
+    # If there's no flight that matches the pilot id, give an error instead
+    else:
+        return {
+            'Error': f'{pilot_id} is not a valid pilot id, soz Captain!'}, 404
+    
+
 # GET method to view a single flight in database, using the flight id
 @flights_bp.route('/<int:id>')
 def get_one_flight(id):
@@ -61,18 +102,22 @@ def add_flight():
     if aircraft_id:
         # Search for corresponding aircraft with that id
         aircraft = Aircraft.query.get(aircraft_id)
-
+        if aircraft.status == 'inactive':
+            return {
+                'Error':
+                "That aircraft can't take off!"
+            }, 406
+        
         #If there's no aircraft that matches the aircraft_id, give below error
         if not aircraft:
             return {
                 'Error': 'Uh-oh, no aircraft with that id exists'
                 }, 404
 
-# # # # # # # # # # # #   DO I NEED THIS?????
     #If aircraft_id is missing or not an integer, give below error
     else: 
         return {
-            'Error': 'Uh-oh, that seems to be an invalid id'
+            'Error': 'Uh-oh, you seems to be missing an aircraft id'
             }, 404
 
     try:

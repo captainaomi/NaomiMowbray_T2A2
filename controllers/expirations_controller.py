@@ -6,33 +6,43 @@ from schemas.expirations_schema import expirations_schema, expirationsz_schema
 from functions.admin_auth import admin_authorisation
 from sqlalchemy.exc import DataError, IntegrityError
 from psycopg2 import errorcodes
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 
 expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
 
-# GET method to view all pilots in database
+# GET method to view all expiration entries in database
 @expirations_bp.route('/')
 def all_pilot_expirations():
     stmt = db.select(Expirations)
     pilot_expirations = db.session.scalars(stmt)
     return expirationsz_schema.dump(pilot_expirations)
 
-# GET method to view a single pilot in database, using their id
+# GET method to view an individual pilot's expirations entry
+# in the database, using the pilot's id
 @expirations_bp.route('/pilot/<int:pilot_id>')
 def single_pilot_expirations(pilot_id):
     # Check if the pilot_id given in the route 
     # is an existing pilot with expirations
     stmt = db.select(Expirations).filter_by(pilot_id=pilot_id) 
     pilot_expirations = db.session.scalar(stmt)
-    if pilot_expirations:
-        return expirations_schema.dump(pilot_expirations)
-    else:
+    try:
+        if pilot_expirations:
+            return expirations_schema.dump(pilot_expirations)
+        else:
+            return {
+                'Error': f'Please check the pilot id; '
+                'either they do not exist or have no expirations yet'}, 404
+    except AttributeError:
+        return {'Error': 'Are you sure that is a valid pilot id?' }, 400  
+    except:
         return {
-            'Error': f'Please check the pilot id; '
-            'either they do not exist or have no expirations yet'}, 404
+            'Error': 'Oh no, some weird error happened!' }, 500    
 
 
+
+# POST method to create an expirations entry for a pilot 
+# using the pilot's id (Note: only one entry per pilot)
 @expirations_bp.route('/pilot/<int:pilot_id>', methods=['POST'])
 # Check user login, as this is an admin only method
 @jwt_required()
@@ -49,7 +59,7 @@ def add_expirations(pilot_id):
         return { 'Error': 'Dang, no pilot with that id was found' }, 404
 
     try:
-        # Create a new expirations model from the given data
+        # Create a new expirations entry from the given data
         expirations = Expirations(
             pilot_id = pilot.id,
             medical = expirations_data.get('medical'),
@@ -68,9 +78,10 @@ def add_expirations(pilot_id):
         # Commit to add the new expirations to the database
         db.session.commit()
         
-        # Congrats! Return the added pilot expirations!
+        # Nice job! Return the pilot's added expirations!
         return expirations_schema.dump(expirations), 201
     
+    # For errors, give the fowllowing applicable messages:
     except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_DATETIME_FORMAT:
@@ -98,42 +109,51 @@ def add_expirations(pilot_id):
         return {'Error': 'You need to login, silly!' }, 400  
 
 
-@expirations_bp.route('/<int:id>', methods=['DELETE'])
+# DELETE method to delete an expirations entry, using the id from route
+@expirations_bp.route('/pilot/<int:pilot_id>', methods=['DELETE'])
 # Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
-def delete_expirations(id):
-    stmt = db.select(Expirations).filter_by(id=id)
-    expirations = db.session.scalar(stmt)
-    if expirations:
-        db.session.delete(expirations)
+def delete_expirations(pilot_id):
+    stmt = db.select(Expirations).filter_by(pilot_id=pilot_id)
+    pilot_expirations = db.session.scalar(stmt)
+    if pilot_expirations:
+        db.session.delete(pilot_expirations)
         db.session.commit()
-        return {'Confirmation': f'Expirations {expirations.pilot} deleted successfully'} # Not sure if pilot will work?
+        return {
+            'Confirmation': 
+            f'Perfecto, expirations for pilot {pilot_id} were deleted!'
+            }, 201
     else:
-        return {'Error': f'Uh-oh, no expirations found with id {id}'}, 404
+        return {
+            'Error': f"Please check the pilot id; they either don't "
+            "exist, or their expirations haven't been entered in yet"
+            }, 404
 
-
-@expirations_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@expirations_bp.route('/pilot/<int:pilot_id>', methods=['PUT', 'PATCH'])
 # Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
-def update_expirations(id):
+def update_expirations(pilot_id):
     expirations_data = expirations_schema.load(request.get_json(), partial=True)
-    stmt = db.select(Expirations).filter_by(id=id)
-    expirations = db.session.scalar(stmt)
-    if expirations:
-        expirations.medical = expirations_data.get(
-            'medical') or expirations.medical
-        expirations.biannual_review = expirations_data.get(
-            'biannual_review') or expirations.biannual_review
-        expirations.company_review = expirations_data.get(
-            'company_review') or expirations.company_review
-        expirations.dangerous_goods = expirations_data.get(
-            'dangerous_goods') or expirations.dangerous_goods
-        expirations.asic = expirations_data.get(
-            'asic') or expirations.asic
+    stmt = db.select(Expirations).filter_by(pilot_id=pilot_id)
+    pilot_expirations = db.session.scalar(stmt)
+    if pilot_expirations:
+        pilot_expirations.medical = expirations_data.get(
+            'medical') or pilot_expirations.medical
+        pilot_expirations.biannual_review = expirations_data.get(
+            'biannual_review') or pilot_expirations.biannual_review
+        pilot_expirations.company_review = expirations_data.get(
+            'company_review') or pilot_expirations.company_review
+        pilot_expirations.dangerous_goods = expirations_data.get(
+            'dangerous_goods') or pilot_expirations.dangerous_goods
+        pilot_expirations.asic = expirations_data.get(
+            'asic') or pilot_expirations.asic
 
         db.session.commit()
-        return expirations_schema.dump(expirations)
+        return expirations_schema.dump(pilot_expirations), 201
     else:
-        return {'Error': f'Uh-oh, no expirations found with id {id}'}, 404
+        return {
+            'Error': f"Please check the pilot id; they either don't "
+            "exist, or their expirations haven't been entered in yet"
+            }, 404
