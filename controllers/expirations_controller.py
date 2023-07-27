@@ -9,7 +9,7 @@ from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required
 
 
-expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
+expirations_bp = Blueprint('expirations', __name__, url_prefix='/expirations')
 
 
 # GET method to view all expiration entries in database

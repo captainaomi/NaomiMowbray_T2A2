@@ -10,11 +10,11 @@ from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-flights_bp = Blueprint('flights', __name__, url_prefix='/flights')
+flight_bp = Blueprint('flights', __name__, url_prefix='/flights')
 
 
 # GET method to view all flights in database
-@flights_bp.route('/')
+@flight_bp.route('/')
 def get_all_flights():
     stmt = db.select(Flight).order_by(Flight.id)
     all_flights = db.session.scalars(stmt)
@@ -23,7 +23,7 @@ def get_all_flights():
 
 # GET method to view all flights for a specific aircraft, 
 # using the aircraft id
-@flights_bp.route('/aircraft/<int:aircraft_id>')
+@flight_bp.route('/aircraft/<int:aircraft_id>')
 def aircraft_specific_flights(aircraft_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(aircraft_id=aircraft_id)
@@ -42,7 +42,7 @@ def aircraft_specific_flights(aircraft_id):
 
 # GET method to view all flights for a specific pilot, 
 # using the pilot's id
-@flights_bp.route('/pilot/<int:pilot_id>')
+@flight_bp.route('/pilot/<int:pilot_id>')
 def pilot_specific_flights(pilot_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(pilot_id=pilot_id) 
@@ -64,7 +64,7 @@ def pilot_specific_flights(pilot_id):
     
 
 # GET method to view a single flight in database, using the flight id
-@flights_bp.route('/<int:id>')
+@flight_bp.route('/<int:id>')
 def get_one_flight(id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(id=id) 
@@ -79,7 +79,7 @@ def get_one_flight(id):
     
 
 # POST method to create a new flight
-@flights_bp.route('/', methods=['POST'])
+@flight_bp.route('/', methods=['POST'])
 # Check the pilot is logged in correctly
 @jwt_required()
 def add_flight():
@@ -167,7 +167,7 @@ def add_flight():
         
 
 # DELETE method to delete a flight, using flight_id from route
-@flights_bp.route('/<int:id>', methods=['DELETE'])
+@flight_bp.route('/<int:id>', methods=['DELETE'])
 # Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
@@ -195,7 +195,7 @@ def delete_aircraft(id):
 
 # PUT and/or PATCH method to edit a flight,
 # using the flight's id from route
-@flights_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@flight_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check the pilot is logged in correctly
 @jwt_required()
 def update_flight(id):

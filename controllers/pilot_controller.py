@@ -10,11 +10,11 @@ from psycopg2 import errorcodes
 from datetime import timedelta
 
 
-pilots_bp = Blueprint('pilot', __name__, url_prefix='/pilots')
+pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
 
 
 # GET method to view all pilots in database
-@pilots_bp.route('/')
+@pilot_bp.route('/')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
     all_pilots = db.session.scalars(stmt)
@@ -22,7 +22,7 @@ def get_all_pilots():
 
 
 # GET method to view a single pilot in database, using the pilot id
-@pilots_bp.route('/<int:id>')
+@pilot_bp.route('/<int:id>')
 def get_one_pilot(id):
     # Check if the pilot_id given in the route is correct
     stmt = db.select(Pilot).filter_by(id=id) 
@@ -37,7 +37,7 @@ def get_one_pilot(id):
 
 
 # POST method to register a new pilot
-@pilots_bp.route('/register', methods=['POST'])
+@pilot_bp.route('/register', methods=['POST'])
 # Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
@@ -90,7 +90,7 @@ def register_pilot():
         
 
 # POST method to for a pilot to login 
-@pilots_bp.route('/login', methods=['POST'])
+@pilot_bp.route('/login', methods=['POST'])
 def login_pilot():
     body_data = request.get_json()
     # Find the pilot by email
@@ -128,7 +128,7 @@ def login_pilot():
 
 
 # DELETE method to delete a pilot, using the pilot_id from route
-@pilots_bp.route('/<int:id>', methods=['DELETE'])
+@pilot_bp.route('/<int:id>', methods=['DELETE'])
 # Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
@@ -157,7 +157,7 @@ def delete_pilot(id):
     
 # PUT and/or PATCH method to update or edit a pilot, 
 # using their id from route
-@pilots_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@pilot_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation

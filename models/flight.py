@@ -2,14 +2,14 @@ from init import db
 
 
 class Flight(db.Model):
-    __tablename__ = "flights"
+    __tablename__ = 'flight'
 
     # Include pilot and aircraft using their foreign keys
     pilot_id = db.Column(
-        db.Integer, db.ForeignKey('pilots.id'), nullable=False
+        db.Integer, db.ForeignKey('pilot.id'), nullable=False
         )
     aircraft_id = db.Column(
-        db.Integer, db.ForeignKey('aircraftz.id'), nullable=False
+        db.Integer, db.ForeignKey('aircraft.id'), nullable=False
         )
 
     id = db.Column(db.Integer, primary_key=True)

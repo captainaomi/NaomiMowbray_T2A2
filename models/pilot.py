@@ -2,7 +2,7 @@ from init import db
 
 
 class Pilot(db.Model):
-    __tablename__ = 'pilots'
+    __tablename__ = 'pilot'
 
     id = db.Column(db.Integer, primary_key=True)
     arn = db.Column(db.Integer, nullable=False, unique=True)
