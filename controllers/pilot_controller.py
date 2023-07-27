@@ -30,7 +30,6 @@ def get_one_pilot(id):
     # If there's a pilot that matches the id, return that pilot
     if pilot:
         return pilot_schema.dump(pilot), 200
-    
     # If there's no pilot that matches the id, give an error instead
     else:
         return {
@@ -39,7 +38,7 @@ def get_one_pilot(id):
 
 # POST method to register a new pilot
 @pilots_bp.route('/register', methods=['POST'])
-# Check user login, as this is an admin only method
+# Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def register_pilot():
@@ -61,17 +60,15 @@ def register_pilot():
         db.session.add(new_pilot)
         # Commit to add the new pilot to the database
         db.session.commit()
-
         # Serialize the new pilot using the schema 
         # without the password field, by using pop
         serialized_pilot = pilot_schema.dump(new_pilot)
         serialized_pilot.pop('password')
-        
-        # Congrats! Return the new pilot!
+        # Congrats! Return your newest pilot!
         return jsonify(serialized_pilot), 201
     
     # For errors, give the following applicable messages:
-    except (KeyError, DataError, IntegrityError) as err:
+    except (DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
                 return { 'Error': 'Oops, arns are numbers only!' }, 418
@@ -85,7 +82,10 @@ def register_pilot():
                      'Error': 
                      f'Ahhhh, {err.orig.diag.column_name} is missing?' 
                      }, 406
-        else:
+            else:
+                return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    # Catch any other sneaky errors that might pop up in future
+    except:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
         
 
@@ -104,8 +104,7 @@ def login_pilot():
             return {
                 'Error': 'This is awkward... Maybe talk to your Chief Pilot'
                 ' as your account is inactive'
-                }, 403
-        
+                }, 403        
         # Now check if the email plus password combo is correct
         elif pilot and bcrypt.check_password_hash(
             pilot.password, body_data.get('password')):
@@ -116,21 +115,21 @@ def login_pilot():
                 'status': pilot.status,
                 'token': token,
                 'is_admin': pilot.is_admin
-                }, 200
-        
+                }, 200        
         # If either are incorrect, give error
         else:
             return {
                 'Error': 'Looks like your email or password is incorrect'
                 }, 418
+        
     # Catch any other random sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
 
-# DELETE method to delete a pilot, using the id from route
+# DELETE method to delete a pilot, using the pilot_id from route
 @pilots_bp.route('/<int:id>', methods=['DELETE'])
-# Check user login, as this is an admin only method
+# Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def delete_pilot(id):
@@ -138,50 +137,58 @@ def delete_pilot(id):
     pilot = db.session.scalar(stmt)
 
     try:
+        # If id in the route gives a vaild pilot, delete pilot  
         if pilot:
             db.session.delete(pilot)
+            # Commit the deletion to the database
             db.session.commit()
             return {
                 'Confirmation': 
                 f'Captain {pilot.name} has been successfully deleted'
                 }, 200
+        # If the aircraft wasn't found, give error
         else:
             return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
+        
     # Catch any other random sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
     
-# PUT and/or PATCH method to update or edit a pilot, using the id from route
+# PUT and/or PATCH method to update or edit a pilot, 
+# using their id from route
 @pilots_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
-# Check user login, as this is an admin only method
+# Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
-
 def update_pilot(id):
     pilot_data = pilot_schema.load(request.get_json(), partial=True)
     stmt = db.select(Pilot).filter_by(id=id)
     pilot = db.session.scalar(stmt)
 
     try:
+        # If id in the route gives a vaild pilot, edit whatever  
+        # information is given in JSON data
         if pilot:
             pilot.arn = pilot_data.get('arn') or pilot.arn
             pilot.name = pilot_data.get('name') or pilot.name
             pilot.email = pilot_data.get('email') or pilot.email
             pilot.status = pilot_data.get('status') or pilot.status
             pilot.is_admin = pilot_data.get('is_admin') or pilot.is_admin
+            # Commit the updated information to the database
             db.session.commit()
             # Serialize the new pilot using the schema 
             # without the password field, by using pop
             serialized_pilot = pilot_schema.dump(pilot)
             serialized_pilot.pop('password')
-            
             # Congrats! Return the new pilot!
-            return jsonify(serialized_pilot), 201
+            return jsonify(serialized_pilot), 201        
+        # If no pilot was found with that given id, give error:
         else:
             return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
+        
     # Catch any other random sneaky errors that might pop up in future
-    except(KeyError, DataError, IntegrityError) as err:
+    except(DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
                 return { 'Error': 'Oops, arns are numbers only!' }, 418
@@ -189,5 +196,9 @@ def update_pilot(id):
                 return {
                      'Error': 'That arn or email is already in use.' 
                      }, 409
+        # Catch any other random sneaky errors that might pop up in future
         else:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    except:
+        return {
+            'Error': 'Oh no, some weird error happened!' }, 500    

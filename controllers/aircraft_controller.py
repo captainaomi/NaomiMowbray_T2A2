@@ -25,8 +25,11 @@ def get_one_aircraft(id):
     # Check if the aircraft_id given in the route is correct
     stmt = db.select(Aircraft).filter_by(id=id) 
     aircraft = db.session.scalar(stmt)
+    
+    # If there's an aircraft that matches the id, return that aircraft
     if aircraft:
         return aircraft_schema.dump(aircraft), 200
+    # If there's no aircraft that matches the id, give an error instead
     else:
         return {
             'Error': f'There is no aircraft with id {id} (yet!)'}, 404
@@ -34,10 +37,9 @@ def get_one_aircraft(id):
 
 # POST method to create a new aircraft in the database
 @aircraft_bp.route('/', methods=['POST'])
-# Check user login, as this is an admin only method
+# Check admin login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
-
 def add_aircraft():
     # Load given aircraft data from the request
     aircraft_data = aircraft_schema.load(request.get_json())
@@ -45,8 +47,7 @@ def add_aircraft():
     # Check if an aircraft with the same callsign already exists
     existing_aircraft = Aircraft.query.filter_by(
         callsign=aircraft_data['callsign']).first()
-    
-    # If it does exist, give this error and stop there:
+    # If it does exist already, give this error and stop there:
     if existing_aircraft:
         return { 'Error': 'That aircraft already exists.' }, 409
     
@@ -56,12 +57,10 @@ def add_aircraft():
         new_aircraft = Aircraft()
         new_aircraft.callsign = aircraft_data.get('callsign')
         new_aircraft.status = aircraft_data.get('status')
-
         # Add the new aircraft to the session
         db.session.add(new_aircraft)
         # Commit to add the new aircraft to the database
         db.session.commit()
-        
         # Congrats! Return the shiny new aircraft!
         return aircraft_schema.dump(new_aircraft), 201
     
@@ -70,28 +69,34 @@ def add_aircraft():
         return { 'Error': 'Oh no, an unexpected error occurred!' }, 500
     
 
-# DELETE method to delete an aircraft, using the id from route
+# DELETE method to delete an aircraft, using the aircraft_id from route
 @aircraft_bp.route('/<int:id>', methods=['DELETE'])
 # Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
 def delete_aircraft(id):
+    # Check if the aircraft_id given in the route is correct
     stmt = db.select(Aircraft).filter_by(id=id)
     aircraft = db.session.scalar(stmt)
+
     try:
+        # If id in the route gives a vaild aircraft, delete aircraft  
         if aircraft:
             db.session.delete(aircraft)
+            # Commit the deletion to the database
             db.session.commit()
             return {
                 'Confirmation': 
                 f'Aircraft {aircraft.callsign} deleted successfully'
                 }, 200
+        # If the aircraft wasn't found, give error
         else:
             return {
                 'Error': 
                 f'Uh-oh, no aircraft found with id {id}'
                 }, 404
-    # Catch any sneaky errors that might pop up in future
+        
+    # Catch any other sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
     
@@ -102,29 +107,34 @@ def delete_aircraft(id):
 # Check user login, as this is an admin only method
 @jwt_required()
 @admin_authorisation
-
 def update_aircraft(id):
+    # Check if the aircraft_id given in the route is correct
     aircraft_data = aircraft_schema.load(request.get_json(), partial=True)
     stmt = db.select(Aircraft).filter_by(id=id)
     aircraft = db.session.scalar(stmt)
+
     try:
+        # If id in the route gives a vaild aircraft, edit whatever  
+        # information is given in JSON data
         if aircraft:
             aircraft.callsign = aircraft_data.get('callsign') or aircraft.callsign
             aircraft.status = aircraft_data.get('status') or aircraft.status
-
+            # Commit the updated information to the database
             db.session.commit()
             return aircraft_schema.dump(aircraft), 201
-        
+        # If the aircraft wasn't found, give error
         else:
             return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
     
-    # Error messages:                    
+    # If unique or other integrity error pops up, give messages:
     except IntegrityError as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
                 return {
                     'Error': 'No can do; that arn or email is already in use.' 
                     }, 409
-    
         else:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    # Catch any other sneaky errors that might pop up in future
+    except:
+        return { 'Error': 'Oh no, an unexpected error occurred!' }, 500
