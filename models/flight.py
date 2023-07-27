@@ -3,6 +3,8 @@ from init import db
 
 class Flight(db.Model):
     __tablename__ = "flights"
+
+    # Include pilot and aircraft using their foreign keys
     pilot_id = db.Column(
         db.Integer, db.ForeignKey('pilots.id'), nullable=False
         )

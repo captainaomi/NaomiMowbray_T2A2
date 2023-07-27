@@ -7,6 +7,7 @@ VALID_STATUSES = ('active', 'inactive')
 
 
 class AircraftSchema(ma.Schema):
+    # Validation for pilot fields:
     callsign = fields.String(required=True, validate=And(
         Length(
             max=10, 

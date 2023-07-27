@@ -16,7 +16,7 @@ aircraft_bp = Blueprint('aircraft', __name__, url_prefix='/aircraft')
 def get_all_aircraft():
     stmt = db.select(Aircraft).order_by(Aircraft.id)
     all_aircraft = db.session.scalars(stmt)
-    return aircraftz_schema.dump(all_aircraft)
+    return aircraftz_schema.dump(all_aircraft), 200
 
 
 # GET method to view a single aircraft in database, using the aircraft id
@@ -26,7 +26,7 @@ def get_one_aircraft(id):
     stmt = db.select(Aircraft).filter_by(id=id) 
     aircraft = db.session.scalar(stmt)
     if aircraft:
-        return aircraft_schema.dump(aircraft)
+        return aircraft_schema.dump(aircraft), 200
     else:
         return {
             'Error': f'There is no aircraft with id {id} (yet!)'}, 404
@@ -45,11 +45,12 @@ def add_aircraft():
     # Check if an aircraft with the same callsign already exists
     existing_aircraft = Aircraft.query.filter_by(
         callsign=aircraft_data['callsign']).first()
-
-# # # # # # # # # # DOES THIS NEED TO BE IN THE TRY BLOCK?????
+    
+    # If it does exist, give this error and stop there:
     if existing_aircraft:
         return { 'Error': 'That aircraft already exists.' }, 409
-
+    
+    # The aircraft callsign is new, so try to create a new aircraft:
     try:
         # Create a new aircraft model from the given data
         new_aircraft = Aircraft()
@@ -64,6 +65,7 @@ def add_aircraft():
         # Congrats! Return the shiny new aircraft!
         return aircraft_schema.dump(new_aircraft), 201
     
+    # Catch any other sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, an unexpected error occurred!' }, 500
     
@@ -80,14 +82,22 @@ def delete_aircraft(id):
         if aircraft:
             db.session.delete(aircraft)
             db.session.commit()
-            return {'Confirmation': f'Aircraft {aircraft.callsign} deleted successfully'}, 201
+            return {
+                'Confirmation': 
+                f'Aircraft {aircraft.callsign} deleted successfully'
+                }, 200
         else:
-            return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+            return {
+                'Error': 
+                f'Uh-oh, no aircraft found with id {id}'
+                }, 404
     # Catch any sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
     
-# PUT and/or PATCH method to update or edit an aircraft, using the id from route
+
+# PUT and/or PATCH method to update or edit an aircraft,
+# using the aircraft's id from route
 @aircraft_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check user login, as this is an admin only method
 @jwt_required()
@@ -104,13 +114,17 @@ def update_aircraft(id):
 
             db.session.commit()
             return aircraft_schema.dump(aircraft), 201
+        
         else:
             return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+    
+    # Error messages:                    
     except IntegrityError as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
                 return {
                     'Error': 'No can do; that arn or email is already in use.' 
                     }, 409
+    
         else:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500

@@ -4,6 +4,7 @@ from models.flight import Flight
 from models.pilot import Pilot
 from models.aircraft import Aircraft
 from schemas.flight_schema import flight_schema, flights_schema
+from functions.admin_auth import admin_authorisation
 from sqlalchemy.exc import DataError, IntegrityError
 from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -17,7 +18,7 @@ flights_bp = Blueprint('flights', __name__, url_prefix='/flights')
 def get_all_flights():
     stmt = db.select(Flight).order_by(Flight.id)
     all_flights = db.session.scalars(stmt)
-    return flights_schema.dump(all_flights), 201
+    return flights_schema.dump(all_flights), 200
 
 
 # GET method to view all flights for a specific aircraft, 
@@ -26,15 +27,17 @@ def get_all_flights():
 def aircraft_specific_flights(aircraft_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(aircraft_id=aircraft_id)
-    aircraft_flights = db.session.scalars(stmt)
+    aircraft_flights = db.session.scalars(stmt).all()
     # If there are any flights that match the id, give those flights
     if aircraft_flights:
-        return flights_schema.dump(aircraft_flights), 201
+        return flights_schema.dump(aircraft_flights), 200
     
     # If there's no flight that matches the aircraft id, give an error instead
     else:
         return {
-            'Error': f'{aircraft_id} is not a valid aircraft id, soz Captain!'}, 404
+            'Error': 
+            f"Aircraft {aircraft_id} is either invalid, inactive, " 
+            "or hasn't completed any flights yet"}, 404
 
 
 # GET method to view all flights for a specific pilot, 
@@ -43,19 +46,21 @@ def aircraft_specific_flights(aircraft_id):
 def pilot_specific_flights(pilot_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(pilot_id=pilot_id) 
-    pilot_flights = db.session.scalars(stmt)
+    pilot_flights = db.session.scalars(stmt).all()
 
-    # If there are any flights that match the id, give those flights
+    # If there are no flights that match the id, give this error:
     if not pilot_flights:
         return {
             'Error': 
-            f"Looks like pilot {pilot_id} hasn't completed any flights yet"
+            f"Looks like pilot {pilot_id} hasn't completed any "
+            "flights yet, they're inactive, or that's not a valid id."
             }, 404
 
+    # If there are any flights that DO match the id, give those flights:
     elif pilot_flights:
-        return flights_schema.dump(pilot_flights), 201
+        return flights_schema.dump(pilot_flights), 200
     
-    # If there's no flight that matches the pilot id, give an error instead
+    # And just in case:
     else:
         return {
             'Error': f'{pilot_id} is not a valid pilot id, soz Captain!'}, 404
@@ -69,13 +74,14 @@ def get_one_flight(id):
     flight = db.session.scalar(stmt)
     # If there's a flight that matches the id, give that flight
     if flight:
-        return flight_schema.dump(flight), 201
+        return flight_schema.dump(flight), 200
     
     # If there's no flight that matches the id, give an error instead
     else:
         return {
             'Error': f'{id} is not a valid flight id, soz Captain!'}, 404
     
+
 # POST method to create a flight
 @flights_bp.route('/', methods=['POST'])
 # Check the logged in pilot
@@ -105,7 +111,7 @@ def add_flight():
         if aircraft.status == 'inactive':
             return {
                 'Error':
-                "That aircraft can't take off!"
+                "That aircraft can't take off; it's inactive!"
             }, 406
         
         #If there's no aircraft that matches the aircraft_id, give below error
@@ -167,18 +173,18 @@ def add_flight():
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
         
 
-# # DELETE method to delete a flight
-# @aircraft_bp.route('/<int:id>', methods=['DELETE'])
-# # Check user login, as this is an admin only method
-# @jwt_required()
-# @admin_authorisation
+# DELETE method to delete a flight
+@flights_bp.route('/<int:id>', methods=['DELETE'])
+# Check user login, as this is an admin only method
+@jwt_required()
+@admin_authorisation
 
-# def delete_aircraft(id):
-#     stmt = db.select(Aircraft).filter_by(id=id)
-#     aircraft = db.session.scalar(stmt)
-#     if aircraft:
-#         db.session.delete(aircraft)
-#         db.session.commit()
-#         return {'Confirmation': f'Aircraft {aircraft.callsign} deleted successfully'}, 201
-#     else:
-#         return {'Error': f'Uh-oh, no aircraft found with id {id}'}, 404
+def delete_aircraft(id):
+    stmt = db.select(Flight).filter_by(id=id)
+    flight = db.session.scalar(stmt)
+    if flight:
+        db.session.delete(flight)
+        db.session.commit()
+        return {'Confirmation': f'Flight {id} deleted successfully'}, 200
+    else:
+        return {'Error': f'Uh-oh, no flight found with id {id}'}, 404

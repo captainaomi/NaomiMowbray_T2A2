@@ -4,6 +4,7 @@ from init import db
 class Expirations(db.Model):
     __tablename__ = "expirations"
 
+    # Include pilot using foreign key
     pilot_id = db.Column(
         db.Integer, db.ForeignKey('pilots.id'), nullable=False, unique=True
         )

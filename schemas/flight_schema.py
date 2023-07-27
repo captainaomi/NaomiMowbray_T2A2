@@ -4,10 +4,13 @@ from marshmallow.validate import Length, And, Regexp
 
 
 class FlightSchema(ma.Schema):
+    # Include pilot's id and name from pilots table
     pilot = fields.Nested('PilotSchema', only=['id', 'name'])
+    # Include aircraft id and callsign from aircraftz table
     aircraft_id = fields.Integer(required=True)
-    date = fields.Date(format='%Y-%m-%d', required=True)
 
+    # Validation for rest of flights fields:
+    date = fields.Date(format='%Y-%m-%d', required=True)
     route = fields.String(required=True, validate=And(
         Length(
             min=10,

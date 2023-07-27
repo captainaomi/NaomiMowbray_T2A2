@@ -16,7 +16,7 @@ expirations_bp = Blueprint('expirations',__name__, url_prefix='/expirations')
 def all_pilot_expirations():
     stmt = db.select(Expirations)
     pilot_expirations = db.session.scalars(stmt)
-    return expirationsz_schema.dump(pilot_expirations)
+    return expirationsz_schema.dump(pilot_expirations), 200
 
 # GET method to view an individual pilot's expirations entry
 # in the database, using the pilot's id
@@ -28,13 +28,13 @@ def single_pilot_expirations(pilot_id):
     pilot_expirations = db.session.scalar(stmt)
     try:
         if pilot_expirations:
-            return expirations_schema.dump(pilot_expirations)
+            return expirations_schema.dump(pilot_expirations), 200
         else:
             return {
                 'Error': f'Please check the pilot id; '
                 'either they do not exist or have no expirations yet'}, 404
     except AttributeError:
-        return {'Error': 'Are you sure that is a valid pilot id?' }, 400  
+        return {'Error': 'Are you sure that is a valid pilot id?' }, 404  
     except:
         return {
             'Error': 'Oh no, some weird error happened!' }, 500    
@@ -123,7 +123,7 @@ def delete_expirations(pilot_id):
         return {
             'Confirmation': 
             f'Perfecto, expirations for pilot {pilot_id} were deleted!'
-            }, 201
+            }, 200
     else:
         return {
             'Error': f"Please check the pilot id; they either don't "

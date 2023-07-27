@@ -18,7 +18,7 @@ pilots_bp = Blueprint('pilot', __name__, url_prefix='/pilots')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
     all_pilots = db.session.scalars(stmt)
-    return pilots_schema.dump(all_pilots), 201
+    return pilots_schema.dump(all_pilots), 200
 
 
 # GET method to view a single pilot in database, using the pilot id
@@ -29,12 +29,13 @@ def get_one_pilot(id):
     pilot = db.session.scalar(stmt)
     # If there's a pilot that matches the id, return that pilot
     if pilot:
-        return pilot_schema.dump(pilot), 201
+        return pilot_schema.dump(pilot), 200
     
     # If there's no pilot that matches the id, give an error instead
     else:
         return {
             'Error': f'{id} is not a valid pilot id, soz Captain!'}, 418
+
 
 # POST method to register a new pilot
 @pilots_bp.route('/register', methods=['POST'])
@@ -69,18 +70,20 @@ def register_pilot():
         # Congrats! Return the new pilot!
         return jsonify(serialized_pilot), 201
     
-    # For errors, give the fowllowing applicable messages:
+    # For errors, give the following applicable messages:
     except (KeyError, DataError, IntegrityError) as err:
         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
                 return { 'Error': 'Oops, arns are numbers only!' }, 418
             elif err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
                 return {
-                     'Error': 'That arn or email is already in use.' 
+                     'Error': 
+                     'Hold on, that arn or email is already in use...' 
                      }, 409
             elif err.orig.pgcode == errorcodes.NOT_NULL_VIOLATION:
                 return {
-                     'Error': f'{err.orig.diag.column_name} is missing' 
+                     'Error': 
+                     f'Ahhhh, {err.orig.diag.column_name} is missing?' 
                      }, 406
         else:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
@@ -102,6 +105,7 @@ def login_pilot():
                 'Error': 'This is awkward... Maybe talk to your Chief Pilot'
                 ' as your account is inactive'
                 }, 403
+        
         # Now check if the email plus password combo is correct
         elif pilot and bcrypt.check_password_hash(
             pilot.password, body_data.get('password')):
@@ -112,7 +116,8 @@ def login_pilot():
                 'status': pilot.status,
                 'token': token,
                 'is_admin': pilot.is_admin
-                }, 201
+                }, 200
+        
         # If either are incorrect, give error
         else:
             return {
@@ -136,7 +141,10 @@ def delete_pilot(id):
         if pilot:
             db.session.delete(pilot)
             db.session.commit()
-            return {'Confirmation': f'Captain {pilot.name} deleted successfully'}, 201
+            return {
+                'Confirmation': 
+                f'Captain {pilot.name} has been successfully deleted'
+                }, 200
         else:
             return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
     # Catch any other random sneaky errors that might pop up in future
