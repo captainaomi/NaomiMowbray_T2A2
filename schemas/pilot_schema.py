@@ -17,9 +17,9 @@ class PilotSchema(ma.Schema):
                 error="Surely pilot's name is longer than 3 characters?"
             ),
             Regexp(
-                '^[a-zA-Z\-]+$', 
+                '^[a-zA-Z\-\ ]+$', 
                 error="Please enter pilot's full name, and be sure to "
-                'only use capital letters, numbers, or dashes'
+                'only use English letters, spaces or dashes'
                 )
             )
         )

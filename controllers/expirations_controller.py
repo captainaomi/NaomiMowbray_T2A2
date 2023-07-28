@@ -13,11 +13,17 @@ expirations_bp = Blueprint('expirations', __name__, url_prefix='/expirations')
 
 
 # GET method to view all expiration entries in database
-@expirations_bp.route('/')
+@expirations_bp.route('/all_expirations')
 def all_pilot_expirations():
     stmt = db.select(Expirations)
-    pilot_expirations = db.session.scalars(stmt)
-    return expirationsz_schema.dump(pilot_expirations), 200
+    all_expirations = db.session.scalars(stmt).all()
+    if all_expirations:
+        return expirationsz_schema.dump(all_expirations), 200
+    else:
+        return {
+            'Error': 
+            f"No expirations have been entered yet"}, 404
+
 
 # GET method to view an individual pilot's expirations entry
 # in the database, using the pilot's id

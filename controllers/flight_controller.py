@@ -10,15 +10,20 @@ from psycopg2 import errorcodes
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-flight_bp = Blueprint('flights', __name__, url_prefix='/flights')
+flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 
 # GET method to view all flights in database
-@flight_bp.route('/')
+@flight_bp.route('/all_flights')
 def get_all_flights():
     stmt = db.select(Flight).order_by(Flight.id)
-    all_flights = db.session.scalars(stmt)
-    return flights_schema.dump(all_flights), 200
+    all_flights = db.session.scalars(stmt).all()
+    if all_flights:
+        return flights_schema.dump(all_flights), 200
+    else:
+        return {
+            'Error': 
+            f"There aren't any logged flights yet, so get up there!"}, 404
 
 
 # GET method to view all flights for a specific aircraft, 
@@ -189,6 +194,8 @@ def delete_aircraft(id):
     # Catch any other sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+
+
 
 
 

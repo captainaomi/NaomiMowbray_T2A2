@@ -4,7 +4,7 @@ from models.pilot import Pilot
 from schemas.pilot_schema import pilot_schema, pilots_schema
 from flask_jwt_extended import create_access_token
 from functions.admin_auth import admin_authorisation
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError, DataError
 from psycopg2 import errorcodes
 from datetime import timedelta
@@ -14,14 +14,19 @@ pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
 
 
 # GET method to view all pilots in database
-@pilot_bp.route('/')
+@pilot_bp.route('/all_pilots')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
-    all_pilots = db.session.scalars(stmt)
-    return pilots_schema.dump(all_pilots), 200
+    all_pilots = db.session.scalars(stmt).all()
+    if all_pilots:
+        return pilots_schema.dump(all_pilots), 200
+    else:
+        return {
+            'Error': 
+            f"You've got no pilots in here yet, sorry!"}, 404
 
 
-# GET method to view a single pilot in database, using the pilot id
+# GET method to view an individual pilot in database, using the pilot id
 @pilot_bp.route('/<int:id>')
 def get_one_pilot(id):
     # Check if the pilot_id given in the route is correct
@@ -36,7 +41,7 @@ def get_one_pilot(id):
             'Error': f'{id} is not a valid pilot id, soz Captain!'}, 418
 
 
-# POST method to register a new pilot
+# POST method to create a new pilot in the database
 @pilot_bp.route('/register', methods=['POST'])
 # Check admin login, as this is an admin only method
 @jwt_required()
@@ -84,6 +89,10 @@ def register_pilot():
                      }, 406
             else:
                 return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    # And because this might happen:
+    except AttributeError:
+        return {'Error': 'Are you sure that is a valid pilot id?' }, 404  
+
     # Catch any other sneaky errors that might pop up in future
     except:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
@@ -155,8 +164,8 @@ def delete_pilot(id):
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
     
-# PUT and/or PATCH method to update or edit a pilot, 
-# using their id from route
+# PUT and/or PATCH method to update or edit a pilot's details, 
+# using their id in route
 @pilot_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
 # Check admin login, as this is an admin only method
 @jwt_required()
@@ -202,3 +211,47 @@ def update_pilot(id):
     except:
         return {
             'Error': 'Oh no, some weird error happened!' }, 500    
+
+
+# PUT and/or PATCH method to allow a piot to update their email
+# or password, using their id in route
+@pilot_bp.route('/update_login', methods=['PUT', 'PATCH'])
+# Check pilot login, as only pilots can update their password 
+# Note: pilots can update their own email, and admins can too
+@jwt_required()
+def update_login():
+    pilot_id = get_jwt_identity()
+    pilot_data = pilot_schema.load(request.get_json(), partial=True)
+    stmt = db.select(Pilot).filter_by(id=pilot_id)
+    pilot = db.session.scalar(stmt)
+
+    try:
+        # If the pilot is logged in, edit their password/email  
+        # information given in JSON data
+        pilot.email = pilot_data.get('email') or pilot.email
+        if pilot_data.get('password'):
+            pilot.password = bcrypt.generate_password_hash(
+                pilot_data.get('password')).decode('utf-8')
+        # Commit to add the updated email/password to the database
+        db.session.commit()
+        # Serialize the new pilot using the schema 
+        # without the password field, by using pop
+        serialized_pilot = pilot_schema.dump(pilot)
+        serialized_pilot.pop('password')
+        # Congrats! Return the confirmation!
+        return jsonify(
+            'Noice, you updated your email or password (or both!): ',
+            serialized_pilot), 200
+    
+    # If unique or other integrity error pops up, give messages:
+    except IntegrityError as err:
+        if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
+            if err.orig.pgcode == errorcodes.UNIQUE_VIOLATION:
+                return {
+                    'Error': 'No can do; that email is already in use.' 
+                    }, 409
+        else:
+            return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    # Catch any other sneaky errors that might pop up in future
+    except:
+        return { 'Error': 'Oh no, an unexpected error occurred!' }, 500

@@ -4,7 +4,7 @@ from models.pilot import Pilot
 from models.flight import Flight
 from models.aircraft import Aircraft
 # from models.expirations import Expirations
-from datetime import datetime, date
+from datetime import date
 
 
 db_commands = Blueprint('db', __name__)
@@ -40,15 +40,15 @@ def seed_db():
         ),
         Pilot(
             arn='102',
-            name='Captain Hook',
-            email='hook@captain.com',
+            name='Jack Sparrow',
+            email='jack@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
             status='inactive'
         )
     ]
     db.session.add_all(pilots)
 
-    aircraftz = [
+    aircraft = [
         Aircraft(
             callsign='VH-CAX',
             status='active'
@@ -66,13 +66,13 @@ def seed_db():
             status='inactive'
         )
     ]
-    db.session.add_all(aircraftz)
+    db.session.add_all(aircraft)
 
     flights = [
         Flight(
-        pilot=pilots[1],
-        aircraft=aircraftz[1],
-        date=datetime(2023, 7, 15, 13, 0, 0),
+        pilot=pilots[2],
+        aircraft=aircraft[1],
+        date=date(2023, 7, 15),
         route='Moreton Island Scenic',
         landings=1,
         flight_time=1.40,
@@ -80,8 +80,8 @@ def seed_db():
 
         Flight(
         pilot=pilots[1],
-        aircraft=aircraftz[3],
-        date=datetime(2023, 7, 14, 9, 3, 0),
+        aircraft=aircraft[3],
+        date=date(2023, 7, 14),
         route='Western Bris Pub Crawl',
         landings=6,
         flight_time=2.31
