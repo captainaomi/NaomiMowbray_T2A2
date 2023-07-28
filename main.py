@@ -30,6 +30,9 @@ def create_app():
     def not_found(err):
         return {'Error': str(err)}, 404
 
+    @app.errorhandler(500)
+    def server_error(err):
+        return {'Error': str(err)}, 500
 
     db.init_app(app)
     ma.init_app(app)
