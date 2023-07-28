@@ -3,7 +3,7 @@ from init import db, bcrypt
 from models.pilot import Pilot
 from models.flight import Flight
 from models.aircraft import Aircraft
-# from models.expirations import Expirations
+from models.expirations import Expirations
 from datetime import date
 
 
@@ -77,7 +77,6 @@ def seed_db():
         landings=1,
         flight_time=1.40,
         ),
-
         Flight(
         pilot=pilots[1],
         aircraft=aircraft[3],
@@ -89,6 +88,24 @@ def seed_db():
     ]
     db.session.add_all(flights)
 
+    expirations = [
+        Expirations(
+        pilot=pilots[2],
+        medical=date(2023, 12, 31),
+        biannual_review=date(2024, 3, 15),
+        company_review=date(2000, 7, 1),
+        dangerous_goods=date(2023, 5, 26),
+        asic=date(2023, 10, 9),
+        ),
+        Expirations(
+        pilot=pilots[1],
+        medical=date(1999, 9, 9),
+        biannual_review=date(2030, 2, 22),
+        company_review=date(1998, 3, 3),
+        dangerous_goods=date(2012, 4, 4),
+        ),
+    ]
+    db.session.add_all(expirations)
     db.session.commit()
     
     print('Your tables have been seeded')

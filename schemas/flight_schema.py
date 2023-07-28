@@ -4,9 +4,9 @@ from marshmallow.validate import Length, And, Regexp
 
 
 class FlightSchema(ma.Schema):
-    # Include pilot's id and name from pilots table
+    # Include pilot's id and name from pilot table
     pilot = fields.Nested('PilotSchema', only=['id', 'name'])
-    # Include aircraft id and callsign from aircraftz table
+    # Include aircraft id from aircraft table
     aircraft_id = fields.Integer(required=True)
 
     # Validation for rest of flights fields:
@@ -29,7 +29,6 @@ class FlightSchema(ma.Schema):
         fields = (
             'pilot',
             'aircraft_id',
-            'aircraft_callsign',
             'id',
             'date',
             'route',
@@ -40,3 +39,24 @@ class FlightSchema(ma.Schema):
 
 flight_schema = FlightSchema()
 flights_schema = FlightSchema(many=True)
+
+
+class FlightPatchSchema(ma.Schema):
+    aircraft_id = fields.Integer()
+    date = fields.Date(format='%Y-%m-%d')
+    route = fields.String(validate=And(
+        Length(
+            min=10,
+            max=100,
+            error='Route should be between 10-100 characters long'
+            ),
+        Regexp(
+            '^[a-zA-Z0-9.\-_. ]+$',
+            error='Please only use letters, numbers, dashes or spaces'
+            )
+        )
+    )
+    landings = fields.Integer()
+    flight_time = fields.Decimal(places=2)
+
+flightpatch_schema = FlightPatchSchema()
