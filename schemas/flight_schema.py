@@ -7,7 +7,7 @@ from marshmallow.exceptions import ValidationError
 class FlightSchema(ma.Schema):
     # Include pilot's id and name from pilot table
     pilot = fields.Nested('PilotSchema', only=['id', 'name'])
-    # Include aircraft id from aircraft table
+    # Include aircraft_id from aircraft table
     aircraft_id = fields.Integer(required=True)
 
     # Validation for rest of flights fields:

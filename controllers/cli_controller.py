@@ -78,6 +78,14 @@ def seed_db():
         flight_time=1.40,
         ),
         Flight(
+        pilot=pilots[2],
+        aircraft=aircraft[1],
+        date=date(2023, 7, 14),
+        route='Brisbane Sunset Spectacular',
+        landings=1,
+        flight_time=0.33,
+        ),
+        Flight(
         pilot=pilots[1],
         aircraft=aircraft[3],
         date=date(2023, 7, 14),
