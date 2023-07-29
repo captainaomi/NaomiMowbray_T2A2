@@ -96,7 +96,6 @@ def register_pilot():
     # And because this might happen:
     except AttributeError:
         return {'Error': 'Are you sure that is a valid pilot id?' }, 404  
-
     # Catch any other sneaky errors that might pop up in future
     except:
             return { 'Error': 'Oh no, a mystery error occurred!' }, 500
@@ -162,7 +161,7 @@ def delete_pilot(id):
         # If the aircraft wasn't found, give error
         else:
             return {'Error': f'Uh-oh, no pilot found with id {id}'}, 404
-        
+
     # Catch any other random sneaky errors that might pop up in future
     except:
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500

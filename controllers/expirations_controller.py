@@ -139,7 +139,7 @@ def delete_expirations(pilot_id):
             db.session.commit()
             return {
                 'Confirmation': 
-                f'All done; expirations for pilot {pilot_id} were deleted!'
+                f'All done; the expirations for Captain Numero {pilot_id} were deleted!'
                 }, 200
         else:
             return {

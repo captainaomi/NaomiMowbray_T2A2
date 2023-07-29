@@ -24,72 +24,79 @@ def drop_db():
 def seed_db():
     pilots = [
         Pilot(
-            arn=100,
-            name='Chief Pilot',
-            email='chief@captain.com',
+            arn=10,
+            name='Doctor Who',
+            email='doctor@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
             status='active',
             is_admin=True
         ),
         Pilot(
-            arn='101',
-            name='Captain Naomi',
-            email='naomi@captain.com',
+            arn='11',
+            name='Rose Tyler',
+            email='rose@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
             status='active'
         ),
         Pilot(
-            arn='102',
-            name='Jack Sparrow',
-            email='jack@captain.com',
+            arn='12',
+            name='Amy Pond',
+            email='amy@captain.com',
+            password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
+            status='active'
+        ),
+        Pilot(
+            arn='13',
+            name='Sarah Jane',
+            email='sarah@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
             status='inactive'
-        )
+        ),
     ]
     db.session.add_all(pilots)
 
     aircraft = [
         Aircraft(
-            callsign='VH-CAX',
+            callsign='VH-TARDIS',
             status='active'
         ),
         Aircraft(
-            callsign='VH-DEV',
-            status='active'
-        ),
-        Aircraft(
-            callsign='VH-WEB',
-            status='active'
-        ),
-        Aircraft(
-            callsign='VH-API',
+            callsign='VH-BIGBEN',
             status='inactive'
+        ),
+        Aircraft(
+            callsign='VH-TIMEY',
+            status='active'
+        ),
+        Aircraft(
+            callsign='VH-K-9',
+            status='active'
         )
     ]
     db.session.add_all(aircraft)
 
     flights = [
         Flight(
-        pilot=pilots[2],
+        pilot=pilots[1],
         aircraft=aircraft[1],
-        date=date(2023, 7, 15),
-        route='Moreton Island Scenic',
+        date=date(1998, 7, 15),
+        route='Gallifrey Recon',
         landings=1,
         flight_time=1.40,
         ),
         Flight(
         pilot=pilots[2],
         aircraft=aircraft[1],
-        date=date(2023, 7, 14),
-        route='Brisbane Sunset Spectacular',
-        landings=1,
+        date=date(2015, 6, 11),
+        route='Bad Wolf Bay Drop Off',
+        landings=2,
         flight_time=0.33,
         ),
         Flight(
-        pilot=pilots[1],
-        aircraft=aircraft[3],
-        date=date(2023, 7, 14),
-        route='Western Bris Pub Crawl',
+        pilot=pilots[4],
+        aircraft=aircraft[4],
+        date=date(2011, 10, 11),
+        route='London Pub Crawl',
         landings=6,
         flight_time=2.31
         ),
@@ -98,7 +105,7 @@ def seed_db():
 
     expirations = [
         Expirations(
-        pilot=pilots[2],
+        pilot=pilots[1],
         medical=date(2023, 12, 31),
         biannual_review=date(2024, 3, 15),
         company_review=date(2000, 7, 1),
@@ -106,7 +113,7 @@ def seed_db():
         asic=date(2023, 10, 9),
         ),
         Expirations(
-        pilot=pilots[1],
+        pilot=pilots[2],
         medical=date(1999, 9, 9),
         biannual_review=date(2030, 2, 22),
         company_review=date(1998, 3, 3),

@@ -93,7 +93,7 @@ def delete_aircraft(id):
             db.session.commit()
             return {
                 'Confirmation': 
-                f'Aircraft {aircraft.callsign} deleted successfully'
+                f'Aircraft {aircraft.callsign} has flown outta the system'
                 }, 200
         # If the aircraft wasn't found, give error
         else:

@@ -20,7 +20,7 @@ class FlightSchema(ma.Schema):
             ),
         Regexp(
             '^[a-zA-Z0-9\.\-\ \!]+$',
-            error='You can use letters, numbers, dashes, spaces, full stops - '
+            error='You can use English letters, numbers, dashes, spaces, full stops - '
             'and a cheeky exclamation point if it was a great flight!'
             )
         )

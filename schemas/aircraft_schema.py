@@ -15,7 +15,7 @@ class AircraftSchema(ma.Schema):
             ),
         Regexp(
             '^[A-Z0-9\-]+$',
-            error='Please only use capital letters, numbers, or dashes'
+            error='Please only use capital English letters, numbers, or dashes'
             )
         )
     )
