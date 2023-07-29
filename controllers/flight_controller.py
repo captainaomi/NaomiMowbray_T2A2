@@ -119,7 +119,7 @@ def add_flight():
         if aircraft.status == 'inactive':
             return {
                 'Error':
-                "That aircraft can't take off; it's inactive!"
+                "That aircraft didn't take off; it's inactive?"
             }, 406
     #If aircraft is missing or not an integer, give below error
     else: 
@@ -199,82 +199,6 @@ def delete_flight(id):
         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
 
 
-# # PUT and/or PATCH method to edit a flight,
-# # using the flight's id from route
-# @flight_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
-# # Check admin login, as this is an admin only method
-# @jwt_required()
-# @admin_authorisation
-# def update_flight(id):
-#     # Check if the flight_id given in the route is correct
-#     stmt = db.select(Flight).filter_by(id=id)
-#     flight = db.session.scalar(stmt)
-#     valid_aircraft = None  # Initialize the variable to None, in case the aircraft isn't being updated
-
-#     try:
-#         # Load given flight data from the request
-#         flight_data = flightpatch_schema.load(request.get_json(), partial=True)
-
-#         # If id in the route gives a vaild flight, edit whatever  
-#         # information is given in JSON data
-#         if flight:
-#             flight.date = flight_data.get('date') or flight.date
-#             flight.route = flight_data.get('route') or flight.route
-#             flight.landings = flight_data.get('landings') or flight.landings
-#             flight.flight_time = flight_data.get('flight_time') or flight.flight_time
-
-#             # Update the aircraft_id if provided in the JSON data
-#             if 'aircraft_id' in flight_data:
-#                 # Ensure aircraft_id is an integer to search through Aircraft objects
-#                 aircraft_id = int(flight_data.get('aircraft_id'))
-#                 # If the id is an integer, continue through code
-#                 if aircraft_id:                
-#                     # Search for corresponding aircraft with that id
-#                     valid_aircraft = Aircraft.query.get(aircraft_id)
-#                     #If there's no aircraft that matches the aircraft_id, give below error
-#                     if not valid_aircraft:
-#                         return {
-#                             'Error': 'Uh-oh, no aircraft with that id exists'
-#                             }, 404
-#                     # If aircraft is inactive, it can't be flown so throw error:
-#                     if valid_aircraft.status == 'inactive':
-#                         return {
-#                             'Error':
-#                             "That aircraft can't take off; it's inactive!"
-#                             }, 406
-#                     flight.aircraft_id = valid_aircraft
-#             #If aircraft is missing or not an integer, give below error
-#             else: 
-#                 return {
-#                     'Error': 'Uh-oh, you seems to be missing an aircraft id'
-#                     }, 404
-#             # Commit the updated information to the database
-#             db.session.commit()
-
-#             return flightpatch_schema.dump(flight), 200 
-#         # If the flight wasn't found, give error
-#         else:
-#             return {'Error': f'Uh-oh, no flight found with id {id}'}, 404
-    
-#     # For errors, have the following applicable messages ready to roll:
-#     except (DataError, IntegrityError) as err:
-#         if hasattr(err, 'orig') and hasattr(err.orig, 'pgcode'):
-#             if err.orig.pgcode == errorcodes.INVALID_TEXT_REPRESENTATION:
-#                 return {
-#                     'Error': 'Use numbers for landings and flight time!'
-#                     }, 406
-#             elif err.orig.pgcode == errorcodes.INVALID_DATETIME_FORMAT:
-#                 return {
-#                     'Error': 'That date looks funny; it should be YYYY-MM-DD'
-#                     }, 406
-#         else:
-#             return { 'Error': 'Something weird happened, have another look?' }, 500
-#     # Catch any other sneaky errors that might pop up in future
-#     except:
-#         return { 'Error': 'Oh no, a mystery error occurred!' }, 500
-
-
-
 # PUT and/or PATCH method to edit a flight,
 # using the flight's id from route
 @flight_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
@@ -315,7 +239,7 @@ def update_flight(id):
                     if aircraft.status == 'inactive':
                         return {
                             'Error':
-                            "That aircraft can't take off; it's inactive!"
+                            "That aircraft did't take off; it's inactive?"
                             }, 406
                     flight.aircraft_id = aircraft_id
             #If aircraft is missing or not an integer, give below error
@@ -344,6 +268,6 @@ def update_flight(id):
                     }, 406
         else:
             return { 'Error': 'Something weird happened, have another look?' }, 500
-    # # Catch any other sneaky errors that might pop up in future
-    # except:
-    #     return { 'Error': 'Oh no, a mystery error occurred!' }, 500
+    # Catch any other sneaky errors that might pop up in future
+    except:
+        return { 'Error': 'Oh no, a mystery error occurred!' }, 500
