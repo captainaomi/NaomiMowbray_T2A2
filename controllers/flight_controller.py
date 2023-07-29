@@ -15,6 +15,7 @@ flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 # GET method to view all flights in database
 @flight_bp.route('/all_flights')
+@jwt_required()
 def get_all_flights():
     stmt = db.select(Flight).order_by(Flight.id)
     all_flights = db.session.scalars(stmt).all()
@@ -29,6 +30,7 @@ def get_all_flights():
 # GET method to view all flights for a specific aircraft, 
 # using the aircraft id
 @flight_bp.route('/aircraft/<int:aircraft_id>')
+@jwt_required()
 def aircraft_specific_flights(aircraft_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(aircraft_id=aircraft_id)
@@ -48,6 +50,7 @@ def aircraft_specific_flights(aircraft_id):
 # GET method to view all flights for a specific pilot, 
 # using the pilot's id
 @flight_bp.route('/pilot/<int:pilot_id>')
+@jwt_required()
 def pilot_specific_flights(pilot_id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(pilot_id=pilot_id) 
@@ -70,6 +73,7 @@ def pilot_specific_flights(pilot_id):
 
 # GET method to view a single flight in database, using the flight id
 @flight_bp.route('/<int:id>')
+@jwt_required()
 def get_one_flight(id):
     # Check if the flight_id given in the route is correct
     stmt = db.select(Flight).filter_by(id=id) 

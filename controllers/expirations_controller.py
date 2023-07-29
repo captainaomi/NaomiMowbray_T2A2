@@ -14,6 +14,7 @@ expirations_bp = Blueprint('expirations', __name__, url_prefix='/expirations')
 
 # GET method to view all expiration entries in database
 @expirations_bp.route('/all_expirations')
+@jwt_required()
 def all_pilot_expirations():
     stmt = db.select(Expirations)
     all_expirations = db.session.scalars(stmt).all()
@@ -28,6 +29,7 @@ def all_pilot_expirations():
 # GET method to view an individual pilot's expirations entry
 # in the database, using the pilot's id
 @expirations_bp.route('/pilot/<int:pilot_id>')
+@jwt_required()
 def single_pilot_expirations(pilot_id):
     # Check if the pilot_id given in the route 
     # is an existing pilot with expirations

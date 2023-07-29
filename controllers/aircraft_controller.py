@@ -13,6 +13,7 @@ aircraft_bp = Blueprint('aircraft', __name__, url_prefix='/aircraft')
 
 # GET method to view all aircraft in database
 @aircraft_bp.route('/all_aircraft')
+@jwt_required()
 def get_all_aircraft():
     stmt = db.select(Aircraft).order_by(Aircraft.id)
     all_aircraft = db.session.scalars(stmt).all()
@@ -25,6 +26,7 @@ def get_all_aircraft():
 
 # GET method to view a single aircraft in database, using the aircraft id
 @aircraft_bp.route('/<int:id>')
+@jwt_required()
 def get_one_aircraft(id):
     # Check if the aircraft_id given in the route is correct
     stmt = db.select(Aircraft).filter_by(id=id) 

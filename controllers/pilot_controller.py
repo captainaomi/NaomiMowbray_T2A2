@@ -15,6 +15,7 @@ pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
 
 # GET method to view all pilots in database
 @pilot_bp.route('/all_pilots')
+@jwt_required()
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
     all_pilots = db.session.scalars(stmt).all()
@@ -30,6 +31,7 @@ def get_all_pilots():
 
 # GET method to view an individual pilot in database, using the pilot id
 @pilot_bp.route('/<int:id>')
+@jwt_required()
 def get_one_pilot(id):
     # Check if the pilot_id given in the route is correct
     stmt = db.select(Pilot).filter_by(id=id) 
