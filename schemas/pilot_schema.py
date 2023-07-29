@@ -7,7 +7,6 @@ VALID_STATUSES = ('active', 'inactive')
 
 
 class PilotSchema(ma.Schema):
-
     # Validation for pilot fields:
     name = fields.String(
         required=True, 
@@ -29,7 +28,7 @@ class PilotSchema(ma.Schema):
     )
     password = fields.String(required=True, validate=Length(
         min=6,
-        error="Let's use more than six characters for your password"
+        error="Let's use more than six characters for your password mkay?"
         )
     )
     status = fields.String(required=True, validate=OneOf(VALID_STATUSES))
@@ -49,3 +48,16 @@ pilot_schema = PilotSchema()
 pilots_schema = PilotSchema(many=True, exclude=['password'])
 
 
+class PilotPatchSchema(ma.Schema):
+    # Validation for aircraft fields for put/patch method:
+    email = fields.String(required=True, validate=Email(
+        error='Oops, try again! Your email seems wrong'
+        )
+    )
+    password = fields.String(required=True, validate=Length(
+        min=6,
+        error="Let's use more than six characters for your password mkay?"
+        )
+    )
+
+pilotpatch_schema = PilotPatchSchema()

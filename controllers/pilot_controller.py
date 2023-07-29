@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from init import db, bcrypt
 from models.pilot import Pilot
-from schemas.pilot_schema import pilot_schema, pilots_schema
+from schemas.pilot_schema import pilot_schema, pilots_schema, pilotpatch_schema
 from flask_jwt_extended import create_access_token
 from functions.admin_auth import admin_authorisation
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -18,8 +18,10 @@ pilot_bp = Blueprint('pilot', __name__, url_prefix='/pilot')
 def get_all_pilots():
     stmt = db.select(Pilot).order_by(Pilot.id)
     all_pilots = db.session.scalars(stmt).all()
+    # If there are any piloys in the database, show them
     if all_pilots:
         return pilots_schema.dump(all_pilots), 200
+    # If we've just started and there are not, show error:
     else:
         return {
             'Error': 
@@ -221,7 +223,7 @@ def update_pilot(id):
 @jwt_required()
 def update_login():
     pilot_id = get_jwt_identity()
-    pilot_data = pilot_schema.load(request.get_json(), partial=True)
+    pilot_data = pilotpatch_schema.load(request.get_json(), partial=True)
     stmt = db.select(Pilot).filter_by(id=pilot_id)
     pilot = db.session.scalar(stmt)
 

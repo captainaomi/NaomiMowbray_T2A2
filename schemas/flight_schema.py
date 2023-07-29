@@ -65,6 +65,7 @@ flights_schema = FlightSchema(many=True)
 
 
 class FlightPatchSchema(ma.Schema):
+    # Validation for aircraft fields for put/patch method:
     aircraft_id = fields.Integer()
     date = fields.Date(format='%Y-%m-%d')
     route = fields.String(required=True, validate=And(
