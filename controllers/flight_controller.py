@@ -127,7 +127,7 @@ def add_flight():
             'Error': 'Uh-oh, you seem to be missing an aircraft id'
             }, 404
     
-    # The aircraft is valid and active, so try to create a new flight:
+    # The aircraft must be valid and active, so try to create a new flight:
     try:
         # Create a new flight model from the given data
         new_flight = Flight(

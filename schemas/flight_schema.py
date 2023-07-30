@@ -42,10 +42,10 @@ class FlightSchema(ma.Schema):
 
     @validates('flight_time')
     def validate_flight_time(self, value):
-        max_flight_time = 99.99
+        max_flight_time = 12.00
         if value > max_flight_time:
-            raise ValidationError("Surely you didn't fly that long! Flight time "
-            "is max. 99.98hrs (even though that's unlikely!)"
+            raise ValidationError("You better not have flown that long "
+            "your flight and duties would be busted. Check again please!)"
             )
 
     class Meta:

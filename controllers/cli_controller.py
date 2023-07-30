@@ -26,7 +26,7 @@ def seed_db():
         Pilot(
             arn=10,
             name='Doctor Who',
-            email='doctor@captain.com',
+            email='doctorwho@captain.com',
             password=bcrypt.generate_password_hash('123abc').decode('utf-8'),
             status='active',
             is_admin=True
@@ -77,24 +77,24 @@ def seed_db():
 
     flights = [
         Flight(
-        pilot=pilots[1],
-        aircraft=aircraft[1],
+        pilot=pilots[0],
+        aircraft=aircraft[0],
         date=date(1998, 7, 15),
         route='Gallifrey Recon',
         landings=1,
         flight_time=1.40,
         ),
         Flight(
-        pilot=pilots[2],
-        aircraft=aircraft[1],
+        pilot=pilots[1],
+        aircraft=aircraft[0],
         date=date(2015, 6, 11),
         route='Bad Wolf Bay Drop Off',
         landings=2,
         flight_time=0.33,
         ),
         Flight(
-        pilot=pilots[4],
-        aircraft=aircraft[4],
+        pilot=pilots[3],
+        aircraft=aircraft[3],
         date=date(2011, 10, 11),
         route='London Pub Crawl',
         landings=6,
@@ -105,7 +105,7 @@ def seed_db():
 
     expirations = [
         Expirations(
-        pilot=pilots[1],
+        pilot=pilots[0],
         medical=date(2023, 12, 31),
         biannual_review=date(2024, 3, 15),
         company_review=date(2000, 7, 1),
@@ -113,7 +113,7 @@ def seed_db():
         asic=date(2023, 10, 9),
         ),
         Expirations(
-        pilot=pilots[2],
+        pilot=pilots[1],
         medical=date(1999, 9, 9),
         biannual_review=date(2030, 2, 22),
         company_review=date(1998, 3, 3),
