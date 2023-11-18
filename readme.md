@@ -18,7 +18,6 @@ I suggest an IDE for this next part, but feel free to use terminal if you feel c
 - Install the requirements: `pip3 install -r requirements.txt`
 
 To begin with, you'll need to create and seed tables. This gives your app the framework by creating mock pilots, expirations, aircraft, and flights. 
-
 In doing so, you'll start off with a user who is an admin, and you can then edit, update or delete from there. 
 
 - To create initial tables, enter: `flask db create`
